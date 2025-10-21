@@ -99,3 +99,40 @@ def test_create_sale_and_calculate_commissions(client, db, setup_hierarchy):
     assert dir_comm is not None
     assert dir_comm.commission_type == 'Override'
     assert dir_comm.amount == 1000.00 # 1%
+
+
+
+
+def test_get_sales(client, db, setup_hierarchy):
+    """
+    Test the GET /api/sales endpoint.
+    It should return a list of sales with the agent's name joined.
+    """
+    
+    # --- 1. ARRANGE ---
+    # Create a sale first using the POST endpoint we already tested
+    sale_data = {
+        "policy_number": "POL-12345",
+        "policy_value": 100000.00,
+        "agent_id": setup_hierarchy['agent_id']
+    }
+    client.post('/api/sales', data=json.dumps(sale_data), content_type='application/json')
+    
+    # --- 2. ACT ---
+    # Now, try to get the list of all sales
+    response = client.get('/api/sales')
+    
+    # --- 3. ASSERT ---
+    assert response.status_code == 200
+    
+    # Check that the data is a list
+    data = response.json
+    assert isinstance(data, list)
+    assert len(data) == 1
+    
+    # Check the content of the sale
+    sale_entry = data[0]
+    assert sale_entry['policy_number'] == "POL-12345"
+    assert sale_entry['policy_value'] == 100000.00
+    assert sale_entry['agent_name'] == "Sarah (Agent)"
+    assert sale_entry['agent_id'] == setup_hierarchy['agent_id']

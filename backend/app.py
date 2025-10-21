@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from flask_cors import CORS
 import datetime
 from datetime import timezone
@@ -114,12 +115,25 @@ def add_agent():
     return jsonify(new_agent.to_dict()), 201
 
 
+# backend/app.py
+
 @app.route("/api/agents", methods=["GET"])
 def get_agents():
-    top_level_agents = db.session.query(Agent).filter_by(parent_id=None).all()
+    # Check if a 'level' query parameter is provided
+    level_filter = request.args.get('level', type=int)
+
+    if level_filter:
+        # Get all agents matching that level
+        stmt = select(Agent).filter_by(level=level_filter)
+        agents = db.session.scalars(stmt).all()
+        # Return a flat list of these agents
+        return jsonify([agent.to_dict() for agent in agents])
+
+    # If no level is specified, return the full hierarchy (original behavior)
+    stmt = select(Agent).filter_by(parent_id=None)
+    top_level_agents = db.session.scalars(stmt).all()
     hierarchy = [agent.to_dict(include_children=True) for agent in top_level_agents]
     return jsonify(hierarchy)
-
 
 # --- Commission Calculation Logic ---
 
@@ -228,4 +242,36 @@ def create_sale():
 
     except Exception as e:
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/api/sales", methods=["GET"])
+def get_sales():
+    try:
+        # Query all sales, and join with the Agent table to get the agent's name
+        # Order by the most recent sale first
+        stmt = (
+            select(Sale, Agent.name)
+            .join(Agent, Sale.agent_id == Agent.id)
+            .order_by(Sale.sale_date.desc())
+        )
+        
+        # .all() will return a list of (Sale, agent_name) tuples
+        results = db.session.execute(stmt).all() 
+        
+        sales_list = []
+        for sale, agent_name in results:  # Unpack the tuple here
+            sales_list.append({
+                "id": sale.id,
+                "policy_number": sale.policy_number,
+                "policy_value": sale.policy_value,
+                "sale_date": sale.sale_date.isoformat(),
+                "agent_id": sale.agent_id,
+                "agent_name": agent_name,
+                "is_cancelled": sale.is_cancelled
+            })
+            
+        return jsonify(sales_list)
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
