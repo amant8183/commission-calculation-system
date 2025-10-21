@@ -117,6 +117,6 @@ def add_agent():
 
 @app.route("/api/agents", methods=["GET"])
 def get_agents():
-    top_level_agents = Agent.query.filter_by(parent_id=None).all()
+    top_level_agents = db.session.query(Agent).filter_by(parent_id=None).all()
     hierarchy = [agent.to_dict(include_children=True) for agent in top_level_agents]
     return jsonify(hierarchy)
