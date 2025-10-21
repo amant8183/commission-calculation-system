@@ -216,6 +216,20 @@ def get_upline(agent_id, db_session):
     return upline
 
 
+def get_downline_agent_ids(agent_id, db_session):
+    """Recursively finds all agent IDs in the downline, including the starting agent."""
+    agent_ids = {agent_id} # Use a set to avoid duplicates
+    
+    # Find direct children
+    children_stmt = select(Agent.id).where(Agent.parent_id == agent_id)
+    children_ids = db_session.scalars(children_stmt).all()
+    
+    for child_id in children_ids:
+        # Recursively get downline for each child and add to the set
+        agent_ids.update(get_downline_agent_ids(child_id, db_session))
+        
+    return list(agent_ids)
+
 # --- Sales API Endpoint ---
 
 
@@ -330,30 +344,36 @@ def get_sales():
 
 # --- Bonus Calculation Logic ---
 
-def get_monthly_sales_volume(agent_id, year, month, db_session):
-    """Calculates the total sales volume for an agent in a given month."""
+def get_monthly_sales_volume(year, month, db_session, agent_id=None, agent_ids_list=None):
+    """
+    Calculates total sales volume for a given month.
+    Either for a single agent_id OR for a list of agent_ids_list.
+    """
     start_date = datetime(year, month, 1, tzinfo=timezone.utc)
-    # Find the first day of the next month
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
-    else:
-        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+    if month == 12: end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    else: end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
 
-    # Query the sum of policy_value for sales within the date range
-    stmt = (
-        select(func.sum(Sale.policy_value))
-        .where(
-            and_(
-                Sale.agent_id == agent_id,
-                Sale.sale_date >= start_date,
-                Sale.sale_date < end_date,
-                Sale.is_cancelled == False # Only count active policies
-            )
+    # Base query
+    query = select(func.sum(Sale.policy_value)).where(
+        and_(
+            Sale.sale_date >= start_date,
+            Sale.sale_date < end_date,
+            Sale.is_cancelled == False
         )
     )
-    # Use the correct db session passed into the function (or db.session from context)
-    total_volume = db_session.scalar(stmt)
-    return total_volume or 0.0 # Return 0 if no sales
+
+    # Filter by single agent OR list of agents
+    if agent_id:
+        query = query.where(Sale.agent_id == agent_id)
+    elif agent_ids_list:
+        # Use .in_() for list filtering
+        query = query.where(Sale.agent_id.in_(agent_ids_list))
+    else:
+        # Should not happen, but return 0 if neither is provided
+        return 0.0 
+
+    total_volume = db_session.scalar(query)
+    return total_volume or 0.0
 
 def get_bonus_rate_for_volume(agent_level, volume, db_session):
     """Finds the bonus rate based on agent level and sales volume."""
@@ -374,26 +394,21 @@ def get_bonus_rate_for_volume(agent_level, volume, db_session):
 
 # --- Bonus Calculation API Endpoint ---
 
+# backend/app.py
+
 @app.route('/api/bonuses/calculate', methods=['POST'])
 def calculate_bonuses():
-    """
-    Calculates and saves bonuses for a specified period and type.
-    Currently only supports Monthly bonuses.
-    """
+    """ Calculates and saves Monthly volume bonuses for all agents based on their level and appropriate volume (personal or downline). """
     data = request.get_json()
     period_str = data.get('period') # e.g., "2025-10"
     bonus_type = data.get('type')   # e.g., "Monthly"
 
     if not period_str or bonus_type != 'Monthly':
         return jsonify({'error': 'Invalid request. Requires period (YYYY-MM) and type=Monthly.'}), 400
+    try: year, month = map(int, period_str.split('-'))
+    except ValueError: return jsonify({'error': 'Invalid period format. Use YYYY-MM.'}), 400
 
     try:
-        year, month = map(int, period_str.split('-'))
-    except ValueError:
-        return jsonify({'error': 'Invalid period format. Use YYYY-MM.'}), 400
-
-    try:
-        # Get all agents using the app's db.session
         all_agents_stmt = select(Agent)
         all_agents = db.session.scalars(all_agents_stmt).all()
 
@@ -401,44 +416,68 @@ def calculate_bonuses():
         bonuses_updated_count = 0
 
         for agent in all_agents:
-            # 1. Calculate Volume for the period using app's db.session
-            volume = get_monthly_sales_volume(agent.id, year, month, db.session)
+            volume = 0
+            # Determine which volume to use based on level
+            if agent.level == 1:
+                # Level 1 Agents use personal volume
+                volume = get_monthly_sales_volume(year=year, month=month, db_session=db.session, agent_id=agent.id)
+            else:
+                # Levels 2, 3, 4 use total downline volume
+                downline_ids = get_downline_agent_ids(agent.id, db.session)
+                volume = get_monthly_sales_volume(year=year, month=month, db_session=db.session, agent_ids_list=downline_ids)
 
             if volume > 0:
-                # 2. Determine Bonus Rate based on tier using app's db.session
                 bonus_rate = get_bonus_rate_for_volume(agent.level, volume, db.session)
-
                 if bonus_rate > 0:
-                    # 3. Calculate Bonus Amount
                     bonus_amount = volume * bonus_rate
 
-                    # 4. Save the Bonus (or update if it already exists for idempotency)
+                    # Check if bonus exists
                     existing_bonus_stmt = select(Bonus).where(
-                        and_(
-                            Bonus.agent_id == agent.id,
-                            Bonus.period == period_str,
-                            Bonus.bonus_type == bonus_type
-                        )
+                        and_(Bonus.agent_id == agent.id, Bonus.period == period_str, Bonus.bonus_type == bonus_type)
                     )
                     existing_bonus = db.session.scalar(existing_bonus_stmt)
 
                     if existing_bonus:
-                        existing_bonus.amount = bonus_amount # Update if re-calculating
+                        existing_bonus.amount = bonus_amount
                         bonuses_updated_count += 1
                     else:
-                        new_bonus = Bonus(
-                            amount=bonus_amount,
-                            bonus_type=bonus_type,
-                            period=period_str,
-                            agent_id=agent.id
-                        )
+                        new_bonus = Bonus(amount=bonus_amount, bonus_type=bonus_type, period=period_str, agent_id=agent.id)
                         db.session.add(new_bonus)
                         bonuses_created_count += 1
 
-        db.session.commit() # Commit all bonuses at the end
-
-        return jsonify({'message': f'{bonus_type} bonuses calculated for {period_str}'}), 200
+        db.session.commit()
+        return jsonify({'message': f'{bonus_type} bonuses calculated for {period_str}. Created: {bonuses_created_count}, Updated: {bonuses_updated_count}'}), 200
 
     except Exception as e:
-        db.session.rollback() # Rollback on error
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        app.logger.error(f"Error calculating bonuses: {e}", exc_info=True) # Log detailed error
+        return jsonify({'error': f'An internal error occurred: {str(e)}'}), 500
+        
+
+@app.route('/api/bonuses', methods=['GET'])
+def get_bonuses():
+    """ Fetches calculated bonuses, joining with agent names. """
+    try:
+        # Query bonuses and join with Agent to get names
+        # Order by period descending, then agent name
+        stmt = (
+            select(Bonus, Agent.name)
+            .join(Agent, Bonus.agent_id == Agent.id)
+            .order_by(Bonus.period.desc(), Agent.name)
+        )
+        results = db.session.execute(stmt).all()
+
+        bonuses_list = []
+        for bonus, agent_name in results:
+            bonuses_list.append({
+                "id": bonus.id,
+                "amount": bonus.amount,
+                "bonus_type": bonus.bonus_type,
+                "period": bonus.period,
+                "agent_id": bonus.agent_id,
+                "agent_name": agent_name,
+            })
+        return jsonify(bonuses_list)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
