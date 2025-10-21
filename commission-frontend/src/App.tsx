@@ -1,4 +1,3 @@
-// frontend/src/App.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AgentNode, { Agent } from './components/AgentNode';
@@ -38,7 +37,7 @@ function App() {
             Hierarchy View
           </h2>
           {loading ? (
-            <p>Loading...</p>
+            <p>Loading hierarchy...</p>
           ) : hierarchy.length > 0 ? (
             // CRITICAL: We only map the top-level agents here.
             // The AgentNode component will handle rendering its own children.
