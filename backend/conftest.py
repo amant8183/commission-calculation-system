@@ -1,55 +1,63 @@
 # backend/conftest.py
 import pytest
-from app import app as flask_app, db as sqlalchemy_db, Agent
+from app import app as flask_app, db as sqlalchemy_db, PerformanceTier, seed_performance_tiers
 
-@pytest.fixture(scope='module')
+# Provide the Flask app instance
+@pytest.fixture(scope='session')
 def app():
-    """Create and configure a new app instance for each test module."""
-    # --- Configure for testing ---
-    flask_app.config['TESTING'] = True
-    flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' 
-    
-    with flask_app.app_context():
-        sqlalchemy_db.create_all()
-        yield flask_app
-        sqlalchemy_db.session.remove()
-        sqlalchemy_db.drop_all()
+    """Session-wide test `Flask` application."""
+    flask_app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:" # Use in-memory DB
+    })
 
-@pytest.fixture(scope='module')
+    # Establish an application context before running tests
+    with flask_app.app_context():
+        sqlalchemy_db.create_all() # Create tables
+        # Seed the performance tiers once per session
+        if sqlalchemy_db.session.query(PerformanceTier).count() == 0:
+             try:
+                 # Ensure seed_performance_tiers exists in app.py
+                 seed_performance_tiers() 
+                 sqlalchemy_db.session.commit() # Commit seeding
+                 print("\n--- Performance tiers seeded for test session ---")
+             except Exception as e:
+                 sqlalchemy_db.session.rollback()
+                 print(f"\n--- ERROR seeding tiers in test session: {e} ---")
+
+        yield flask_app
+        
+        # Optional: Drop tables after session if needed for file DBs
+        # sqlalchemy_db.drop_all()
+
+# Provide the test client (uses the app fixture)
+@pytest.fixture(scope='session')
 def client(app):
     """A test client for the app."""
     return app.test_client()
 
-# --- THIS IS THE UPDATED FIXTURE ---
+# Provide the db instance - NO transactional wrapper needed for basic testing
 @pytest.fixture(scope='function')
 def db(app):
     """
-    A fixture to provide a clean database session for each test function.
-    This will roll back any changes after the test is complete.
+    Provides the db instance within the app context for each test.
+    Relies on in-memory DB and app context for isolation.
     """
-    connection = sqlalchemy_db.engine.connect()
-    transaction = connection.begin()
-    
-    # 1. Create a session bound to this transaction
-    session = sqlalchemy_db.sessionmaker(bind=connection)()
-    
-    # 2. Save the app's default session factory
-    original_session = sqlalchemy_db.session
-    
-    # 3. Overwrite db.session with our new transaction-bound session instance
-    sqlalchemy_db.session = session
+    with app.app_context():
+         # Clean tables before each test for better isolation
+         # This is slightly slower but more robust than complex transaction fixtures
+         sqlalchemy_db.drop_all()
+         sqlalchemy_db.create_all()
+         # Re-seed performance tiers for each test
+         try:
+             seed_performance_tiers()
+             sqlalchemy_db.session.commit()
+         except Exception as e:
+             sqlalchemy_db.session.rollback()
+             print(f"\n--- ERROR re-seeding tiers in test: {e} ---")
 
-    yield sqlalchemy_db # Test runs here
+         yield sqlalchemy_db # Yield the actual db object
 
-    # --- Teardown ---
-    # 4. Close our transaction-bound session
-    session.close()
-    
-    # 5. Rollback the transaction (this undoes all changes)
-    transaction.rollback()
-    
-    # 6. Close the connection
-    connection.close()
-    
-    # 7. Restore the original session factory
-    sqlalchemy_db.session = original_session
+         # Clean up after test
+         sqlalchemy_db.session.remove()
+         # No need to drop_all here if we do it before the next test

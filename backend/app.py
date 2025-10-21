@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select
+from sqlalchemy import func, select, and_
 from flask_cors import CORS
-import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 app = Flask(__name__)
 CORS(app)
 
@@ -44,7 +43,7 @@ class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     policy_number = db.Column(db.String(50), unique=True, nullable=False)
     policy_value = db.Column(db.Float, nullable=False)
-    sale_date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone.utc))
+    sale_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
     is_cancelled = db.Column(db.Boolean, default=False)
 
@@ -56,7 +55,7 @@ class Commission(db.Model):
     commission_type = db.Column(db.String(50))  # e.g., 'FYC', 'Override'
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
-    payout_date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone.utc))
+    payout_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 # --- 4. Bonus Model ---
 class Bonus(db.Model):
@@ -74,7 +73,7 @@ class Clawback(db.Model):
     original_commission_id = db.Column(db.Integer, db.ForeignKey("commission.id"))
     original_bonus_id = db.Column(db.Integer, db.ForeignKey("bonus.id"))
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
-    processed_date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone.utc))
+    processed_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 # --- 6. Hierarchy Snapshot Model ---
@@ -95,6 +94,57 @@ class PerformanceTier(db.Model):
     max_volume = db.Column(db.Float)
     bonus_rate = db.Column(db.Float)
 
+
+def seed_performance_tiers():
+    """Adds the default performance tier data to the database."""
+    # This function now expects an active app context from the caller
+    stmt = select(func.count(PerformanceTier.id))
+    count = db.session.scalar(stmt)
+
+    if count > 0:
+        print("Performance tiers already seeded.")
+        return
+
+    print("Seeding performance tiers...")
+    tiers_data = [
+        # Agent Level 1
+        {'agent_level': 1, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 25000, 'bonus_rate': 0.00},
+        {'agent_level': 1, 'tier_name': 'SILVER', 'min_volume': 25000, 'max_volume': 50000, 'bonus_rate': 0.02},
+        {'agent_level': 1, 'tier_name': 'GOLD', 'min_volume': 50000, 'max_volume': 100000, 'bonus_rate': 0.03},
+        {'agent_level': 1, 'tier_name': 'PLATINUM', 'min_volume': 100000, 'max_volume': float('inf'), 'bonus_rate': 0.05},
+        # Agent Level 2 (Team Leads)
+        {'agent_level': 2, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 100000, 'bonus_rate': 0.00},
+        {'agent_level': 2, 'tier_name': 'SILVER', 'min_volume': 100000, 'max_volume': 250000, 'bonus_rate': 0.03},
+        {'agent_level': 2, 'tier_name': 'GOLD', 'min_volume': 250000, 'max_volume': 500000, 'bonus_rate': 0.05},
+        {'agent_level': 2, 'tier_name': 'PLATINUM', 'min_volume': 500000, 'max_volume': float('inf'), 'bonus_rate': 0.07},
+        # Agent Level 3 (Managers)
+        {'agent_level': 3, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 500000, 'bonus_rate': 0.00},
+        {'agent_level': 3, 'tier_name': 'SILVER', 'min_volume': 500000, 'max_volume': 1000000, 'bonus_rate': 0.04},
+        {'agent_level': 3, 'tier_name': 'GOLD', 'min_volume': 1000000, 'max_volume': 2000000, 'bonus_rate': 0.06},
+        {'agent_level': 3, 'tier_name': 'PLATINUM', 'min_volume': 2000000, 'max_volume': float('inf'), 'bonus_rate': 0.08},
+        # Agent Level 4 (Directors)
+        {'agent_level': 4, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 1000000, 'bonus_rate': 0.00},
+        {'agent_level': 4, 'tier_name': 'SILVER', 'min_volume': 1000000, 'max_volume': 3000000, 'bonus_rate': 0.05},
+        {'agent_level': 4, 'tier_name': 'GOLD', 'min_volume': 3000000, 'max_volume': 5000000, 'bonus_rate': 0.07},
+        {'agent_level': 4, 'tier_name': 'PLATINUM', 'min_volume': 5000000, 'max_volume': float('inf'), 'bonus_rate': 0.10},
+    ]
+
+    for tier_info in tiers_data:
+        tier = PerformanceTier(**tier_info)
+        db.session.add(tier)
+
+    # Use flush, commit will be handled by the caller (CLI command or test fixture)
+    db.session.flush()
+    print("Performance tiers flushed.")
+
+
+# --- CLI Commands ---
+@app.cli.command("seed-db")
+def seed_db_command():
+    """Seeds the database with initial data (like performance tiers)."""
+    seed_performance_tiers()
+    db.session.commit() # Commit the changes made by seeding
+    print("Database seeded successfully!")
 
 # --- Function to create tables ---
 def create_tables():
@@ -275,3 +325,120 @@ def get_sales():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+        
+
+
+# --- Bonus Calculation Logic ---
+
+def get_monthly_sales_volume(agent_id, year, month, db_session):
+    """Calculates the total sales volume for an agent in a given month."""
+    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+    # Find the first day of the next month
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+
+    # Query the sum of policy_value for sales within the date range
+    stmt = (
+        select(func.sum(Sale.policy_value))
+        .where(
+            and_(
+                Sale.agent_id == agent_id,
+                Sale.sale_date >= start_date,
+                Sale.sale_date < end_date,
+                Sale.is_cancelled == False # Only count active policies
+            )
+        )
+    )
+    # Use the correct db session passed into the function (or db.session from context)
+    total_volume = db_session.scalar(stmt)
+    return total_volume or 0.0 # Return 0 if no sales
+
+def get_bonus_rate_for_volume(agent_level, volume, db_session):
+    """Finds the bonus rate based on agent level and sales volume."""
+    stmt = (
+        select(PerformanceTier.bonus_rate)
+        .where(
+            and_(
+                PerformanceTier.agent_level == agent_level,
+                PerformanceTier.min_volume <= volume,
+                PerformanceTier.max_volume > volume
+            )
+        )
+        .limit(1) # Ensure only one tier is matched
+    )
+    # Use the correct db session passed into the function (or db.session from context)
+    rate = db_session.scalar(stmt)
+    return rate if rate is not None else 0.0 # Return 0 if no matching tier
+
+# --- Bonus Calculation API Endpoint ---
+
+@app.route('/api/bonuses/calculate', methods=['POST'])
+def calculate_bonuses():
+    """
+    Calculates and saves bonuses for a specified period and type.
+    Currently only supports Monthly bonuses.
+    """
+    data = request.get_json()
+    period_str = data.get('period') # e.g., "2025-10"
+    bonus_type = data.get('type')   # e.g., "Monthly"
+
+    if not period_str or bonus_type != 'Monthly':
+        return jsonify({'error': 'Invalid request. Requires period (YYYY-MM) and type=Monthly.'}), 400
+
+    try:
+        year, month = map(int, period_str.split('-'))
+    except ValueError:
+        return jsonify({'error': 'Invalid period format. Use YYYY-MM.'}), 400
+
+    try:
+        # Get all agents using the app's db.session
+        all_agents_stmt = select(Agent)
+        all_agents = db.session.scalars(all_agents_stmt).all()
+
+        bonuses_created_count = 0
+        bonuses_updated_count = 0
+
+        for agent in all_agents:
+            # 1. Calculate Volume for the period using app's db.session
+            volume = get_monthly_sales_volume(agent.id, year, month, db.session)
+
+            if volume > 0:
+                # 2. Determine Bonus Rate based on tier using app's db.session
+                bonus_rate = get_bonus_rate_for_volume(agent.level, volume, db.session)
+
+                if bonus_rate > 0:
+                    # 3. Calculate Bonus Amount
+                    bonus_amount = volume * bonus_rate
+
+                    # 4. Save the Bonus (or update if it already exists for idempotency)
+                    existing_bonus_stmt = select(Bonus).where(
+                        and_(
+                            Bonus.agent_id == agent.id,
+                            Bonus.period == period_str,
+                            Bonus.bonus_type == bonus_type
+                        )
+                    )
+                    existing_bonus = db.session.scalar(existing_bonus_stmt)
+
+                    if existing_bonus:
+                        existing_bonus.amount = bonus_amount # Update if re-calculating
+                        bonuses_updated_count += 1
+                    else:
+                        new_bonus = Bonus(
+                            amount=bonus_amount,
+                            bonus_type=bonus_type,
+                            period=period_str,
+                            agent_id=agent.id
+                        )
+                        db.session.add(new_bonus)
+                        bonuses_created_count += 1
+
+        db.session.commit() # Commit all bonuses at the end
+
+        return jsonify({'message': f'{bonus_type} bonuses calculated for {period_str}'}), 200
+
+    except Exception as e:
+        db.session.rollback() # Rollback on error
+        return jsonify({'error': str(e)}), 500

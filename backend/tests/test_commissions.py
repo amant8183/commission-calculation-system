@@ -10,22 +10,25 @@ def setup_hierarchy(db):
     # 1. Create Director (Level 4)
     director = Agent(name="Mike (Director)", level=4, parent_id=None)
     db.session.add(director)
-    db.session.commit() # Commit to get director.id
+    db.session.flush() # Flush to get director.id
     
     # 2. Create Manager (Level 3)
     manager = Agent(name="Lisa (Manager)", level=3, parent_id=director.id)
     db.session.add(manager)
-    db.session.commit() # Commit to get manager.id
+    db.session.flush() # Flush to get manager.id
 
     # 3. Create Team Lead (Level 2)
     team_lead = Agent(name="Bob (Team Lead)", level=2, parent_id=manager.id)
     db.session.add(team_lead)
-    db.session.commit() # Commit to get team_lead.id
+    db.session.flush() # Flush to get team_lead.id
     
     # 4. Create Agent (Level 1)
     agent = Agent(name="Sarah (Agent)", level=1, parent_id=team_lead.id)
     db.session.add(agent)
-    db.session.commit() # Commit to get agent.id
+    db.session.flush() # Flush to get agent.id
+    
+    # Commit so the data is available to the API endpoints
+    db.session.commit()
 
     # Return the IDs for use in the test
     return {
