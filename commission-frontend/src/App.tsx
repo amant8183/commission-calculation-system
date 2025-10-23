@@ -13,7 +13,7 @@ function App() {
   const [bonuses, setBonuses] = useState<Bonus[]>([]); // 2. Add state for bonuses
   const [loading, setLoading] = useState(true);
   const [calcMessage, setCalcMessage] = useState(''); // Message for bonus calculation
-
+  const [cancelMessage, setCancelMessage] = useState('');
   // Fetch Hierarchy
   const fetchHierarchy = useCallback(async () => {
     try {
@@ -78,6 +78,21 @@ function App() {
   const onSaleAdded = () => {
     fetchSales(); // Refresh sales list
   };
+  
+  // --- 2. ADD CANCELLATION HANDLER ---
+  const handleCancelSale = useCallback(async (saleId: number) => {
+    setCancelMessage(`Cancelling sale ${saleId}...`); // Provide immediate feedback
+    try {
+      const response = await axios.put(`${API_URL}/sales/${saleId}/cancel`);
+      setCancelMessage(response.data.message || `Sale ${saleId} cancelled.`);
+      // Refresh both sales (to show cancelled status) and bonuses (potential clawbacks)
+      await fetchSales();
+      await fetchBonuses();
+    } catch (error) {
+      console.error(`Failed to cancel sale ${saleId}:`, error);
+      setCancelMessage(`Failed to cancel sale ${saleId}.`);
+    }
+  }, [fetchSales, fetchBonuses]); // Add dependencies
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -112,7 +127,7 @@ function App() {
 
           {/* Sales List */}
           <div className="lg:col-span-2">
-             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading sales...</p></div>) : (<SalesList sales={sales} />)}
+             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading sales...</p></div>) : (<SalesList sales={sales} onCancelSale={handleCancelSale} />)}
           </div>
           
           {/* 6. Bonus List */}
