@@ -393,7 +393,7 @@ def cancel_sale(sale_id):
                 # Note: get_monthly_sales_volume already excludes cancelled sales
                 new_volume = 0
                 if agent.level == 1:
-                    new_volume = get_monthly_sales_volume(year=sale_year, month=sale_month, db_session=db.session, agent_id=agent.id)
+                    new_volume = get_monthly_sales_volume(agent_ids_list=[agent.id], year=sale_year, month=sale_month, db_session=db.session)
                 else:
                     downline_ids = get_downline_agent_ids(agent.id, db.session)
                     new_volume = get_monthly_sales_volume(year=sale_year, month=sale_month, db_session=db.session, agent_ids_list=downline_ids)
@@ -431,36 +431,64 @@ def cancel_sale(sale_id):
 
 # --- Bonus Calculation Logic ---
 
-def get_monthly_sales_volume(year, month, db_session, agent_id=None, agent_ids_list=None):
-    """
-    Calculates total sales volume for a given month.
-    Either for a single agent_id OR for a list of agent_ids_list.
-    """
+def get_monthly_sales_volume(agent_ids_list, year, month, db_session):
+    """Calculates total sales volume for a list of agents in a given month."""
     start_date = datetime(year, month, 1, tzinfo=timezone.utc)
     if month == 12: end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     else: end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
 
-    # Base query
-    query = select(func.sum(Sale.policy_value)).where(
+    stmt = select(func.sum(Sale.policy_value)).where(
         and_(
+            Sale.agent_id.in_(agent_ids_list), # Use list here now
             Sale.sale_date >= start_date,
             Sale.sale_date < end_date,
             Sale.is_cancelled == False
         )
     )
-
-    # Filter by single agent OR list of agents
-    if agent_id:
-        query = query.where(Sale.agent_id == agent_id)
-    elif agent_ids_list:
-        # Use .in_() for list filtering
-        query = query.where(Sale.agent_id.in_(agent_ids_list))
-    else:
-        # Should not happen, but return 0 if neither is provided
-        return 0.0 
-
-    total_volume = db_session.scalar(query)
+    total_volume = db_session.scalar(stmt)
     return total_volume or 0.0
+
+
+def get_quarterly_sales_volume(agent_ids_list, year, quarter, db_session):
+    """Calculates total sales volume for a list of agents in a given quarter."""
+    if quarter == 1: start_month, end_month = 1, 3
+    elif quarter == 2: start_month, end_month = 4, 6
+    elif quarter == 3: start_month, end_month = 7, 9
+    elif quarter == 4: start_month, end_month = 10, 12
+    else: return 0.0 # Invalid quarter
+
+    start_date = datetime(year, start_month, 1, tzinfo=timezone.utc)
+    # End date is the start of the next quarter
+    if end_month == 12: end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    else: end_date = datetime(year, end_month + 1, 1, tzinfo=timezone.utc)
+
+    stmt = select(func.sum(Sale.policy_value)).where(
+        and_(
+            Sale.agent_id.in_(agent_ids_list),
+            Sale.sale_date >= start_date,
+            Sale.sale_date < end_date,
+            Sale.is_cancelled == False
+        )
+    )
+    total_volume = db_session.scalar(stmt)
+    return total_volume or 0.0
+
+def get_annual_sales_volume(agent_ids_list, year, db_session):
+    """Calculates total sales volume for a list of agents in a given year."""
+    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    stmt = select(func.sum(Sale.policy_value)).where(
+        and_(
+            Sale.agent_id.in_(agent_ids_list),
+            Sale.sale_date >= start_date,
+            Sale.sale_date < end_date,
+            Sale.is_cancelled == False
+        )
+    )
+    total_volume = db_session.scalar(stmt)
+    return total_volume or 0.0
+
 
 def get_bonus_rate_for_volume(agent_level, volume, db_session):
     """Finds the bonus rate based on agent level and sales volume."""
@@ -478,21 +506,41 @@ def get_bonus_rate_for_volume(agent_level, volume, db_session):
     # Use the correct db session passed into the function (or db.session from context)
     rate = db_session.scalar(stmt)
     return rate if rate is not None else 0.0 # Return 0 if no matching tier
+    
+
+
 
 # --- Bonus Calculation API Endpoint ---
 
 
 @app.route('/api/bonuses/calculate', methods=['POST'])
 def calculate_bonuses():
-    """ Calculates and saves Monthly volume bonuses for all agents based on their level and appropriate volume (personal or downline). """
+    """ Calculates and saves bonuses for Monthly, Quarterly, or Annual periods. """
     data = request.get_json()
-    period_str = data.get('period') # e.g., "2025-10"
-    bonus_type = data.get('type')   # e.g., "Monthly"
+    period_str = data.get('period') # e.g., "2025-10", "2026-Q1", "2027"
+    bonus_type = data.get('type')   # e.g., "Monthly", "Quarterly", "Annual"
 
-    if not period_str or bonus_type != 'Monthly':
-        return jsonify({'error': 'Invalid request. Requires period (YYYY-MM) and type=Monthly.'}), 400
-    try: year, month = map(int, period_str.split('-'))
-    except ValueError: return jsonify({'error': 'Invalid period format. Use YYYY-MM.'}), 400
+    # Validate bonus_type
+    if bonus_type not in ['Monthly', 'Quarterly', 'Annual']:
+        return jsonify({'error': 'Invalid bonus type. Use Monthly, Quarterly, or Annual.'}), 400
+    if not period_str:
+        return jsonify({'error': 'Period string is required.'}), 400
+
+    # Parse period string based on type
+    year, month, quarter = None, None, None
+    try:
+        if bonus_type == 'Monthly':
+            year, month = map(int, period_str.split('-'))
+            if not (1 <= month <= 12): raise ValueError("Invalid month")
+        elif bonus_type == 'Quarterly':
+            year_str, q_str = period_str.split('-')
+            year = int(year_str)
+            quarter = int(q_str[1:]) # Extract number from Q1, Q2 etc.
+            if not (1 <= quarter <= 4): raise ValueError("Invalid quarter")
+        elif bonus_type == 'Annual':
+            year = int(period_str)
+    except (ValueError, IndexError):
+        return jsonify({'error': f'Invalid period format for {bonus_type}. Use YYYY-MM, YYYY-Q#, or YYYY.'}), 400
 
     try:
         all_agents_stmt = select(Agent)
@@ -503,21 +551,28 @@ def calculate_bonuses():
 
         for agent in all_agents:
             volume = 0
-            # Determine which volume to use based on level
+            agent_ids_to_sum = [] # List of IDs for volume calculation
+
+            # Determine volume scope (personal or downline) and calculate
             if agent.level == 1:
-                # Level 1 Agents use personal volume
-                volume = get_monthly_sales_volume(year=year, month=month, db_session=db.session, agent_id=agent.id)
+                agent_ids_to_sum = [agent.id] # Level 1 uses personal sales
             else:
-                # Levels 2, 3, 4 use total downline volume
-                downline_ids = get_downline_agent_ids(agent.id, db.session)
-                volume = get_monthly_sales_volume(year=year, month=month, db_session=db.session, agent_ids_list=downline_ids)
+                agent_ids_to_sum = get_downline_agent_ids(agent.id, db.session) # Others use downline
+
+            # Calculate volume based on bonus type
+            if bonus_type == 'Monthly':
+                volume = get_monthly_sales_volume(agent_ids_to_sum, year, month, db.session)
+            elif bonus_type == 'Quarterly':
+                volume = get_quarterly_sales_volume(agent_ids_to_sum, year, quarter, db.session)
+            elif bonus_type == 'Annual':
+                volume = get_annual_sales_volume(agent_ids_to_sum, year, db.session)
 
             if volume > 0:
                 bonus_rate = get_bonus_rate_for_volume(agent.level, volume, db.session)
                 if bonus_rate > 0:
                     bonus_amount = volume * bonus_rate
 
-                    # Check if bonus exists
+                    # Check if bonus exists and Save/Update
                     existing_bonus_stmt = select(Bonus).where(
                         and_(Bonus.agent_id == agent.id, Bonus.period == period_str, Bonus.bonus_type == bonus_type)
                     )
@@ -536,7 +591,7 @@ def calculate_bonuses():
 
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Error calculating bonuses: {e}", exc_info=True) # Log detailed error
+        app.logger.error(f"Error calculating bonuses: {e}", exc_info=True)
         return jsonify({'error': f'An internal error occurred: {str(e)}'}), 500
         
 
