@@ -165,8 +165,6 @@ def add_agent():
     return jsonify(new_agent.to_dict()), 201
 
 
-# backend/app.py
-
 @app.route("/api/agents", methods=["GET"])
 def get_agents():
     # Check if a 'level' query parameter is provided
@@ -340,7 +338,51 @@ def get_sales():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
         
+@app.route('/api/sales/<int:sale_id>/cancel', methods=['PUT'])
+def cancel_sale(sale_id):
+    """
+    Marks a sale as cancelled and creates corresponding negative clawback
+    records for all associated commissions.
+    """
+    try:
+        # 1. Find the sale
+        sale_to_cancel = db.session.get(Sale, sale_id)
+        if not sale_to_cancel:
+            return jsonify({"error": "Sale not found"}), 404
+        
+        # Check if already cancelled (optional, but good practice)
+        if sale_to_cancel.is_cancelled:
+             return jsonify({"message": "Policy already marked as cancelled"}), 200
 
+        # 2. Mark the sale as cancelled
+        sale_to_cancel.is_cancelled = True
+        
+        # 3. Find all commissions associated with this sale
+        related_commissions = db.session.scalars(
+            select(Commission).where(Commission.sale_id == sale_id)
+        ).all()
+        
+        # 4. Create a negative clawback record for each commission
+        for commission in related_commissions:
+            clawback_record = Clawback(
+                amount=-commission.amount, # Negative amount
+                original_commission_id=commission.id,
+                original_bonus_id=None, # Bonus clawback handled separately later
+                sale_id=sale_id
+            )
+            db.session.add(clawback_record)
+            
+        # 5. Commit changes (Mark sale cancelled + add clawback records)
+        # Note: We commit here because this is a specific action endpoint.
+        # The test fixture's outer transaction will still handle rollback.
+        db.session.commit() 
+
+        return jsonify({"message": "Policy cancelled and clawbacks initiated"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error cancelling sale {sale_id}: {e}", exc_info=True)
+        return jsonify({"error": f"An internal error occurred: {str(e)}"}), 500
 
 # --- Bonus Calculation Logic ---
 
