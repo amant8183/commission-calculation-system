@@ -64,3 +64,74 @@ def test_cancel_policy_and_create_commission_clawbacks(client, db, setup_hierarc
         assert clawback is not None
         assert clawback.amount == pytest.approx(-commission.amount)
         assert clawback.original_bonus_id is None # No bonus clawback yet
+        
+
+# backend/tests/test_clawbacks.py
+# ... (keep existing imports and previous test function) ...
+from app import Bonus, PerformanceTier # Add Bonus and PerformanceTier
+from datetime import datetime, timezone # Add datetime and timezone
+
+def test_cancel_policy_and_create_bonus_clawback(client, db, setup_hierarchy):
+    """
+    Test cancelling a policy correctly creates a clawback record
+    linked to the affected monthly bonus.
+    """
+    # === 1. ARRANGE ===
+    agent_id = setup_hierarchy['agent_id'] # Sarah (Level 1)
+
+    # A) Create sales sufficient for a bonus (e.g., $110k -> Platinum 5%)
+    sales_payloads = [
+        {"policy_number": "POL-BONUS-A", "policy_value": 60000.00, "agent_id": agent_id},
+        {"policy_number": "POL-BONUS-B", "policy_value": 50000.00, "agent_id": agent_id}, # This sale will be cancelled
+    ]
+    sale_ids = []
+    for payload in sales_payloads:
+         sale_resp = client.post('/api/sales', json=payload)
+         assert sale_resp.status_code == 201
+         sale_ids.append(sale_resp.json['sale_id'])
+
+    sale_to_cancel_id = sale_ids[1] # ID of POL-BONUS-B
+
+    # B) Calculate the monthly bonus for the current period
+    now = datetime.now(timezone.utc)
+    period_str = f"{now.year}-{now.month:02d}"
+    bonus_calc_resp = client.post('/api/bonuses/calculate', json={'period': period_str, 'type': 'Monthly'})
+    assert bonus_calc_resp.status_code == 200
+
+    # Verify the initial bonus was created
+    initial_bonus = db.session.query(Bonus).filter_by(agent_id=agent_id, period=period_str).first()
+    assert initial_bonus is not None
+    # Expected Bonus: $110k * 5% = $5500
+    assert initial_bonus.amount == pytest.approx(5500.00)
+    initial_bonus_id = initial_bonus.id
+
+    # === 2. ACT ===
+    # Cancel the second sale (POL-BONUS-B, $50k value)
+    cancel_resp = client.put(f'/api/sales/{sale_to_cancel_id}/cancel')
+    assert cancel_resp.status_code == 200 # Verify cancellation worked
+
+    # === 3. ASSERT ===
+    # --- Assert 3a: Commission Clawbacks Created (Verify previous logic still works)
+    comm_clawbacks = db.session.query(Clawback).filter(
+        Clawback.sale_id == sale_to_cancel_id,
+        Clawback.original_commission_id != None
+    ).all()
+    assert len(comm_clawbacks) == 4 # Should still create commission clawbacks
+
+    # --- Assert 3b: Bonus Clawback Created
+    bonus_clawback = db.session.query(Clawback).filter_by(
+        sale_id=sale_to_cancel_id,
+        original_bonus_id=initial_bonus_id # Check link to original bonus
+    ).first()
+
+    assert bonus_clawback is not None
+    assert bonus_clawback.original_commission_id is None # Make sure it's not mixed up
+
+    # --- Assert 3c: Bonus Clawback Amount Calculation ---
+    # Original Volume = 110k (Platinum @ 5%) -> Bonus $5500
+    # Cancelled Sale Value = 50k
+    # New Volume = 60k (Gold @ 3%) -> New *expected* bonus = $1800
+    # Bonus Clawback Amount = New Expected Bonus - Original Bonus
+    # Bonus Clawback Amount = $1800 - $5500 = -$3700
+    # The clawback record should store the negative adjustment needed.
+    assert bonus_clawback.amount == pytest.approx(-3700.00)

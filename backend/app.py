@@ -341,40 +341,85 @@ def get_sales():
 @app.route('/api/sales/<int:sale_id>/cancel', methods=['PUT'])
 def cancel_sale(sale_id):
     """
-    Marks a sale as cancelled and creates corresponding negative clawback
-    records for all associated commissions.
+    Marks a sale as cancelled. Creates clawback records for associated 
+    commissions AND recalculates/creates clawbacks for affected monthly bonuses.
     """
     try:
         # 1. Find the sale
         sale_to_cancel = db.session.get(Sale, sale_id)
         if not sale_to_cancel:
             return jsonify({"error": "Sale not found"}), 404
-        
-        # Check if already cancelled (optional, but good practice)
         if sale_to_cancel.is_cancelled:
              return jsonify({"message": "Policy already marked as cancelled"}), 200
 
-        # 2. Mark the sale as cancelled
+        # --- Cancellation Starts ---
         sale_to_cancel.is_cancelled = True
-        
-        # 3. Find all commissions associated with this sale
-        related_commissions = db.session.scalars(
-            select(Commission).where(Commission.sale_id == sale_id)
-        ).all()
-        
-        # 4. Create a negative clawback record for each commission
+
+        # --- Commission Clawback ---
+        related_commissions_stmt = select(Commission).where(Commission.sale_id == sale_id)
+        related_commissions = db.session.scalars(related_commissions_stmt).all()
+
         for commission in related_commissions:
             clawback_record = Clawback(
-                amount=-commission.amount, # Negative amount
+                amount=-commission.amount, 
                 original_commission_id=commission.id,
-                original_bonus_id=None, # Bonus clawback handled separately later
                 sale_id=sale_id
             )
             db.session.add(clawback_record)
-            
-        # 5. Commit changes (Mark sale cancelled + add clawback records)
-        # Note: We commit here because this is a specific action endpoint.
-        # The test fixture's outer transaction will still handle rollback.
+
+        # --- Bonus Clawback/Recalculation (Monthly Only for now) ---
+        # Find all agents involved in the original sale (seller + upline)
+        # We can use the HierarchySnapshot for this
+        snapshot_stmt = select(HierarchySnapshot.agent_id).where(HierarchySnapshot.sale_id == sale_id)
+        affected_agent_ids = db.session.scalars(snapshot_stmt).unique().all()
+
+        # Determine the period of the sale (Year-Month)
+        sale_year = sale_to_cancel.sale_date.year
+        sale_month = sale_to_cancel.sale_date.month
+        period_str = f"{sale_year}-{sale_month:02d}"
+
+        for agent_id in affected_agent_ids:
+            agent = db.session.get(Agent, agent_id)
+            if not agent: continue # Skip if agent somehow doesn't exist
+
+            # Find the original bonus calculation for this agent and period
+            original_bonus_stmt = select(Bonus).where(
+                and_(Bonus.agent_id == agent_id, Bonus.period == period_str, Bonus.bonus_type == 'Monthly')
+            )
+            original_bonus = db.session.scalar(original_bonus_stmt)
+
+            if original_bonus:
+                # Recalculate the volume *after* cancellation
+                # Note: get_monthly_sales_volume already excludes cancelled sales
+                new_volume = 0
+                if agent.level == 1:
+                    new_volume = get_monthly_sales_volume(year=sale_year, month=sale_month, db_session=db.session, agent_id=agent.id)
+                else:
+                    downline_ids = get_downline_agent_ids(agent.id, db.session)
+                    new_volume = get_monthly_sales_volume(year=sale_year, month=sale_month, db_session=db.session, agent_ids_list=downline_ids)
+
+                # Recalculate the expected bonus amount based on the new volume
+                new_bonus_rate = get_bonus_rate_for_volume(agent.level, new_volume, db.session)
+                new_expected_bonus_amount = new_volume * new_bonus_rate
+
+                # Calculate the adjustment needed
+                bonus_adjustment = new_expected_bonus_amount - original_bonus.amount
+
+                # If an adjustment is needed, create a clawback record
+                if abs(bonus_adjustment) > 0.001: # Use a small tolerance for float comparison
+                    bonus_clawback = Clawback(
+                        amount=bonus_adjustment, # Store the adjustment (can be negative)
+                        original_bonus_id=original_bonus.id, # Link to the original bonus
+                        sale_id=sale_id # Link to the sale that triggered it
+                    )
+                    db.session.add(bonus_clawback)
+
+                    # Optional: Update the original bonus record? 
+                    # Or just rely on clawbacks for adjustments? 
+                    # Let's rely on clawbacks for now as per the brief.
+                    # original_bonus.amount = new_expected_bonus_amount # Uncomment to update original record
+
+        # Commit sale cancellation, commission clawbacks, and bonus clawbacks
         db.session.commit() 
 
         return jsonify({"message": "Policy cancelled and clawbacks initiated"}), 200
@@ -436,7 +481,6 @@ def get_bonus_rate_for_volume(agent_level, volume, db_session):
 
 # --- Bonus Calculation API Endpoint ---
 
-# backend/app.py
 
 @app.route('/api/bonuses/calculate', methods=['POST'])
 def calculate_bonuses():
