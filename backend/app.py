@@ -838,3 +838,11 @@ def get_bonuses():
     except Exception as e:
         app.logger.error(f"Error fetching bonuses: {e}", exc_info=True)
         return jsonify({"error": "An internal error occurred while fetching bonuses"}), 500
+
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        seed_performance_tiers()
+        db.session.commit()
+    app.run(debug=True, port=5000)
