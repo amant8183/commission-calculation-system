@@ -4,16 +4,16 @@ import AgentNode, { Agent } from './components/AgentNode';
 import SalesForm from './components/SalesForm';
 import SalesList, { Sale } from './components/SalesList';
 import BonusList, { Bonus } from './components/BonusList';
+import { SummaryData } from './components/DashboardSummary';
   
 const API_URL = 'http://127.0.0.1:5000/api';
 
 function App() {
   const [hierarchy, setHierarchy] = useState<Agent[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
-  const [bonuses, setBonuses] = useState<Bonus[]>([]); // 2. Add state for bonuses
+  const [bonuses, setBonuses] = useState<Bonus[]>([]);
   const [loading, setLoading] = useState(true);
   const [calcMessage, setCalcMessage] = useState(''); // Message for bonus calculation
-
   // Fetch Hierarchy
   const fetchHierarchy = useCallback(async () => {
     try {
@@ -43,6 +43,16 @@ function App() {
       console.error("Failed to fetch bonuses:", error);
     }
   }, []);
+  
+  // 4. Fetch Summary
+  
+  const fetchSummary = useCallback(async () => {
+    try {
+      await axios.get<SummaryData>(`${API_URL}/dashboard/summary`);
+    } catch (error) {
+      console.error("Failed to fetch dashboard summary:", error);
+    }
+  }, []);
 
   // Load all data on initial render
   useEffect(() => {
@@ -54,30 +64,43 @@ function App() {
   }, [fetchHierarchy, fetchSales, fetchBonuses]); // Add fetchBonuses dependency
 
   // 4. Function to trigger bonus calculation
-  const handleCalculateBonuses = async () => {
-    setCalcMessage('Calculating...');
-    const now = new Date();
-    // Ensure month is zero-padded (e.g., 01, 09, 10)
-    const periodStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`; 
+  const handleCalculateBonuses = useCallback(async () => {
+  setCalcMessage('Calculating...');
+  const now = new Date();
+  const periodStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`; 
 
-    try {
-      const response = await axios.post(`${API_URL}/bonuses/calculate`, {
-        period: periodStr,
-        type: 'Monthly'
-      });
-      setCalcMessage(response.data.message || 'Calculation complete!');
-      // Refresh the bonus list AFTER calculation finishes
-      await fetchBonuses(); 
-    } catch (error) {
-      console.error("Failed to calculate bonuses:", error);
-      setCalcMessage('Calculation failed.');
-    }
-  };
+  try {
+    const response = await axios.post(`${API_URL}/bonuses/calculate`, {
+      period: periodStr,
+      type: 'Monthly'
+    });
+    setCalcMessage(response.data.message || 'Calculation complete!');
+    await fetchBonuses(); 
+    await fetchSummary(); 
+  } catch (error) {
+    console.error("Failed to calculate bonuses:", error);
+    setCalcMessage('Calculation failed.');
+  }
+}, [fetchBonuses, fetchSummary]);
 
   // Callback for when a sale is added
   const onSaleAdded = () => {
     fetchSales(); // Refresh sales list
+    fetchSummary();
   };
+  
+  // --- 2. ADD CANCELLATION HANDLER ---
+  const handleCancelSale = useCallback(async (saleId: number) => {
+    try {
+      await axios.put(`${API_URL}/sales/${saleId}/cancel`);
+      // Refresh both sales (to show cancelled status) and bonuses (potential clawbacks)
+      await fetchSales();
+      await fetchBonuses();
+      await fetchSummary();
+    } catch (error) {
+      console.error(`Failed to cancel sale ${saleId}:`, error);
+    }
+  }, [fetchSales, fetchBonuses, fetchSummary]); // Add dependencies
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -112,7 +135,7 @@ function App() {
 
           {/* Sales List */}
           <div className="lg:col-span-2">
-             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading sales...</p></div>) : (<SalesList sales={sales} />)}
+             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading sales...</p></div>) : (<SalesList sales={sales} onCancelSale={handleCancelSale} />)}
           </div>
           
           {/* 6. Bonus List */}

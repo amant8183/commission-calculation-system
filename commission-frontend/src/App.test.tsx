@@ -15,7 +15,7 @@ describe('App Component', () => {
 
   it('shows a loading message and then renders the hierarchy', async () => {
     // 2. Define the fake data we want axios to return
-    const mockData = [
+    const mockAgentsData = [
       {
         id: 1,
         name: 'Mike (Director)',
@@ -33,8 +33,25 @@ describe('App Component', () => {
       },
     ];
 
-    // 3. Tell the mock to return our fake data when 'get' is called
-    mockedAxios.get.mockResolvedValue({ data: mockData });
+    const mockSalesData: any[] = [];
+    const mockBonusesData: any[] = [];
+    const mockLevel1AgentsData: any[] = []; // For SalesForm dropdown
+
+    // 3. Mock all API endpoints that App.tsx and SalesForm call
+    mockedAxios.get.mockImplementation((url: string) => {
+      if (url.includes('/agents?level=1')) {
+        // SalesForm fetches level 1 agents for dropdown
+        return Promise.resolve({ data: mockLevel1AgentsData });
+      } else if (url.includes('/agents')) {
+        // App.tsx fetches full hierarchy
+        return Promise.resolve({ data: mockAgentsData });
+      } else if (url.includes('/sales')) {
+        return Promise.resolve({ data: mockSalesData });
+      } else if (url.includes('/bonuses')) {
+        return Promise.resolve({ data: mockBonusesData });
+      }
+      return Promise.reject(new Error('Unknown endpoint'));
+    });
 
     // 4. Render the App component
     render(<App />);
@@ -54,17 +71,16 @@ describe('App Component', () => {
   });
 
   it('shows an error message if the fetch fails', async () => {
-    // Tell the mock to reject the request with an error
+    // Tell the mock to reject all requests with an error
     mockedAxios.get.mockRejectedValue(new Error('Network Error'));
 
     render(<App />);
 
-    // Wait for the error to be handled
+    // Wait for the error to be handled and loading to complete
     await waitFor(() => {
-      // You might want to add a real error message to your App.tsx
-      // For now, we'll just check that the loading is gone and no data is present
+      // Check that the loading is gone and no data is present
       expect(screen.queryByText(/Loading hierarchy.../i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Mike \(Director\)/i)).not.toBeInTheDocument();
     });
+    expect(screen.queryByText(/Mike \(Director\)/i)).not.toBeInTheDocument();
   });
 });
