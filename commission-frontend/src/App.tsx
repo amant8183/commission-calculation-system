@@ -5,6 +5,7 @@ import SalesForm from './components/SalesForm';
 import SalesList, { Sale } from './components/SalesList';
 import BonusList, { Bonus } from './components/BonusList';
 import DashboardSummary, { SummaryData } from './components/DashboardSummary';
+import SalesChart from './components/SalesChart';
   
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -221,6 +222,11 @@ function App() {
           {/* 6. Bonus List */}
           <div className="lg:col-span-3">
             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading bonuses...</p></div>) : (<BonusList bonuses={bonuses} />)}
+          </div>
+
+          {/* 7. Sales Chart */}
+          <div className="lg:col-span-3">
+            {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading chart...</p></div>) : (<SalesChart sales={sales} />)}
           </div>
         </div>
       </div>
