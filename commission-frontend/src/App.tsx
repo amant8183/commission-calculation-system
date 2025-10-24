@@ -4,7 +4,7 @@ import AgentNode, { Agent } from './components/AgentNode';
 import SalesForm from './components/SalesForm';
 import SalesList, { Sale } from './components/SalesList';
 import BonusList, { Bonus } from './components/BonusList';
-import { SummaryData } from './components/DashboardSummary';
+import DashboardSummary, { SummaryData } from './components/DashboardSummary';
   
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -12,6 +12,7 @@ function App() {
   const [hierarchy, setHierarchy] = useState<Agent[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [bonuses, setBonuses] = useState<Bonus[]>([]);
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [calcMessage, setCalcMessage] = useState(''); // Message for bonus calculation
   // Fetch Hierarchy
@@ -45,23 +46,24 @@ function App() {
   }, []);
   
   // 4. Fetch Summary
-  
   const fetchSummary = useCallback(async () => {
     try {
-      await axios.get<SummaryData>(`${API_URL}/dashboard/summary`);
+      const response = await axios.get<SummaryData>(`${API_URL}/dashboard/summary`);
+      setSummaryData(response.data);
     } catch (error) {
       console.error("Failed to fetch dashboard summary:", error);
+      setSummaryData(null);
     }
   }, []);
 
   // Load all data on initial render
   useEffect(() => {
     setLoading(true);
-    // Fetch all three sets of data
-    Promise.all([fetchHierarchy(), fetchSales(), fetchBonuses()]).finally(() => {
+    // Fetch all data including summary
+    Promise.all([fetchHierarchy(), fetchSales(), fetchBonuses(), fetchSummary()]).finally(() => {
       setLoading(false);
     });
-  }, [fetchHierarchy, fetchSales, fetchBonuses]); // Add fetchBonuses dependency
+  }, [fetchHierarchy, fetchSales, fetchBonuses, fetchSummary]);
 
   // 4. Function to trigger bonus calculation (generic for all types)
   const handleCalculateBonuses = useCallback(async (bonusType: 'Monthly' | 'Quarterly' | 'Annual', period: string) => {
@@ -122,7 +124,10 @@ function App() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Agent Hierarchy Management</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Commission Calculation System</h1>
+
+        {/* Dashboard Summary */}
+        <DashboardSummary summary={summaryData} loading={loading} />
 
         <SalesForm onSaleAdded={onSaleAdded} />
 
