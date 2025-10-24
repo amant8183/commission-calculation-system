@@ -50,4 +50,80 @@ describe('AgentNode Component', () => {
     expect(parentName).toBeInTheDocument();
     expect(childName).toBeInTheDocument();
   });
+
+  it('renders multiple levels of hierarchy', () => {
+    const mockAgent: Agent = {
+      id: 1,
+      name: 'Director',
+      level: 4,
+      children: [
+        {
+          id: 2,
+          name: 'Manager',
+          level: 3,
+          children: [
+            {
+              id: 3,
+              name: 'Team Lead',
+              level: 2,
+              children: [
+                {
+                  id: 4,
+                  name: 'Agent',
+                  level: 1,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    render(<AgentNode agent={mockAgent} />);
+
+    // All 4 levels should be rendered
+    expect(screen.getByText(/Director/i)).toBeInTheDocument();
+    expect(screen.getByText(/Manager/i)).toBeInTheDocument();
+    expect(screen.getByText(/Team Lead/i)).toBeInTheDocument();
+    expect(screen.getByText(/Agent/i)).toBeInTheDocument();
+
+    // Check all level badges
+    expect(screen.getByText(/Level 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/Level 3/i)).toBeInTheDocument();
+    expect(screen.getByText(/Level 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/Level 1/i)).toBeInTheDocument();
+  });
+
+  it('renders agent without children', () => {
+    const mockAgent: Agent = {
+      id: 1,
+      name: 'Solo Agent',
+      level: 1,
+    };
+
+    render(<AgentNode agent={mockAgent} />);
+
+    expect(screen.getByText(/Solo Agent/i)).toBeInTheDocument();
+    expect(screen.getByText(/Level 1/i)).toBeInTheDocument();
+  });
+
+  it('renders multiple children correctly', () => {
+    const mockAgent: Agent = {
+      id: 1,
+      name: 'Manager',
+      level: 3,
+      children: [
+        { id: 2, name: 'Agent 1', level: 1 },
+        { id: 3, name: 'Agent 2', level: 1 },
+        { id: 4, name: 'Agent 3', level: 1 },
+      ],
+    };
+
+    render(<AgentNode agent={mockAgent} />);
+
+    expect(screen.getByText(/Manager/i)).toBeInTheDocument();
+    expect(screen.getByText(/Agent 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Agent 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/Agent 3/i)).toBeInTheDocument();
+  });
 });

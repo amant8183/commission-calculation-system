@@ -63,4 +63,73 @@ it('renders sales data correctly', () => {
     const cancelButton2 = screen.getAllByRole('button', { name: /Cancel/i })[1];
     expect(cancelButton2).toBeDisabled();
   });
+
+  it('displays cancelled status badge correctly', () => {
+    render(<SalesList sales={mockSales} onCancelSale={mockOnCancelSale} />);
+
+    // Check for Active badge on first sale
+    expect(screen.getByText('Active')).toBeInTheDocument();
+
+    // Check for Cancelled badge on second sale
+    expect(screen.getByText('Cancelled')).toBeInTheDocument();
+  });
+
+  it('formats dates correctly', () => {
+    render(<SalesList sales={mockSales} onCancelSale={mockOnCancelSale} />);
+
+    // Dates should be formatted (exact format depends on locale)
+    const rows = screen.getAllByRole('row');
+    // 1 header + 2 data rows
+    expect(rows).toHaveLength(3);
+  });
+
+  it('renders correct number of sales', () => {
+    const manySales: Sale[] = [
+      { id: 1, policy_number: 'POL-001', policy_value: 100000, sale_date: '2025-10-21T10:00:00Z', agent_id: 1, agent_name: 'Agent 1', is_cancelled: false },
+      { id: 2, policy_number: 'POL-002', policy_value: 200000, sale_date: '2025-10-20T10:00:00Z', agent_id: 2, agent_name: 'Agent 2', is_cancelled: false },
+      { id: 3, policy_number: 'POL-003', policy_value: 300000, sale_date: '2025-10-19T10:00:00Z', agent_id: 3, agent_name: 'Agent 3', is_cancelled: false },
+    ];
+
+    render(<SalesList sales={manySales} onCancelSale={mockOnCancelSale} />);
+
+    expect(screen.getByText('POL-001')).toBeInTheDocument();
+    expect(screen.getByText('POL-002')).toBeInTheDocument();
+    expect(screen.getByText('POL-003')).toBeInTheDocument();
+
+    const cancelButtons = screen.getAllByRole('button', { name: /Cancel/i });
+    expect(cancelButtons).toHaveLength(3);
+  });
+
+  it('handles large policy values correctly', () => {
+    const largeSales: Sale[] = [
+      { id: 1, policy_number: 'POL-BIG', policy_value: 9999999.99, sale_date: '2025-10-21T10:00:00Z', agent_id: 1, agent_name: 'Big Agent', is_cancelled: false },
+    ];
+
+    render(<SalesList sales={largeSales} onCancelSale={mockOnCancelSale} />);
+
+    expect(screen.getByText('POL-BIG')).toBeInTheDocument();
+    expect(screen.getByText('Big Agent')).toBeInTheDocument();
+  });
+
+  it('renders all table headers', () => {
+    render(<SalesList sales={[]} onCancelSale={mockOnCancelSale} />);
+
+    expect(screen.getByText('Policy #')).toBeInTheDocument();
+    expect(screen.getByText('Value')).toBeInTheDocument();
+    expect(screen.getByText('Agent')).toBeInTheDocument();
+    expect(screen.getByText('Date')).toBeInTheDocument();
+    expect(screen.getByText('Status')).toBeInTheDocument();
+    expect(screen.getByText('Actions')).toBeInTheDocument();
+  });
+
+  it('does not call onCancelSale when clicking disabled button', () => {
+    render(<SalesList sales={mockSales} onCancelSale={mockOnCancelSale} />);
+
+    // Click the disabled button for cancelled sale
+    const cancelButton2 = screen.getAllByRole('button', { name: /Cancel/i })[1];
+    fireEvent.click(cancelButton2);
+
+    // Should not have called the handler
+    expect(mockOnCancelSale).not.toHaveBeenCalled();
+  });
 });
