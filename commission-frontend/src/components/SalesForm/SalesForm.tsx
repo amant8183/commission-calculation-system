@@ -20,6 +20,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
   // State for loading and messages
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   // 1. Fetch Level 1 agents when the component loads
   useEffect(() => {
@@ -33,25 +35,67 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
         }
       } catch (error) {
         console.error('Failed to fetch agents:', error);
+        setMessage('Failed to load agents. Please refresh the page.');
+        setIsError(true);
       }
     };
     fetchSellingAgents();
   }, []);
 
+  // Validation function
+  const validateForm = (): boolean => {
+    const newErrors: {[key: string]: string} = {};
+    
+    // Policy Number validation
+    if (!policyNumber.trim()) {
+      newErrors.policyNumber = 'Policy number is required';
+    } else if (policyNumber.trim().length < 3) {
+      newErrors.policyNumber = 'Policy number must be at least 3 characters';
+    }
+    
+    // Policy Value validation
+    if (!policyValue) {
+      newErrors.policyValue = 'Policy value is required';
+    } else {
+      const value = parseFloat(policyValue);
+      if (isNaN(value)) {
+        newErrors.policyValue = 'Policy value must be a valid number';
+      } else if (value <= 0) {
+        newErrors.policyValue = 'Policy value must be greater than zero';
+      } else if (value > 10000000) {
+        newErrors.policyValue = 'Policy value cannot exceed $10,000,000';
+      }
+    }
+    
+    // Agent selection validation
+    if (!selectedAgentId) {
+      newErrors.selectedAgentId = 'Please select a selling agent';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // 2. Handle the form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!policyNumber || !policyValue || !selectedAgentId) {
-      setMessage('All fields are required.');
+    
+    // Clear previous messages
+    setMessage('');
+    setIsError(false);
+    
+    // Validate form
+    if (!validateForm()) {
+      setMessage('Please fix the errors below.');
+      setIsError(true);
       return;
     }
 
     setLoading(true);
-    setMessage('');
 
     try {
       const saleData = {
-        policy_number: policyNumber,
+        policy_number: policyNumber.trim(),
         policy_value: parseFloat(policyValue),
         agent_id: parseInt(selectedAgentId),
       };
@@ -59,16 +103,32 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
       const response = await axios.post(`${API_URL}/sales`, saleData);
       
       if (response.status === 201) {
-        setMessage(`Sale ${response.data.sale_id} recorded successfully!`);
+        setMessage(`✓ Sale #${response.data.sale_id} recorded successfully!`);
+        setIsError(false);
+        setErrors({});
+        
         // Reset form
         setPolicyNumber('');
         setPolicyValue('');
 
         onSaleAdded();
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setMessage(''), 5000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to record sale:', error);
-      setMessage('Failed to record sale. Please try again.');
+      
+      // Extract error message from API response
+      let errorMessage = 'Failed to record sale. Please try again.';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setMessage(errorMessage);
+      setIsError(true);
     } finally {
       setLoading(false);
     }
@@ -82,46 +142,84 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
           {/* Policy Number */}
           <div>
             <label htmlFor="policyNumber" className="block text-sm font-medium text-gray-700">
-              Policy Number
+              Policy Number *
             </label>
             <input
               type="text"
               id="policyNumber"
               value={policyNumber}
-              onChange={(e) => setPolicyNumber(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              onChange={(e) => {
+                setPolicyNumber(e.target.value);
+                if (errors.policyNumber) {
+                  setErrors({...errors, policyNumber: ''});
+                }
+              }}
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm ${
+                errors.policyNumber 
+                  ? 'border-red-300 focus:border-red-500' 
+                  : 'border-gray-300 focus:border-indigo-500'
+              }`}
               placeholder="POL-12345"
+              required
             />
+            {errors.policyNumber && (
+              <p className="mt-1 text-sm text-red-600">{errors.policyNumber}</p>
+            )}
           </div>
           
           {/* Policy Value */}
           <div>
             <label htmlFor="policyValue" className="block text-sm font-medium text-gray-700">
-              Policy Value ($)
+              Policy Value ($) *
             </label>
             <input
               type="number"
               id="policyValue"
               value={policyValue}
-              onChange={(e) => setPolicyValue(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              onChange={(e) => {
+                setPolicyValue(e.target.value);
+                if (errors.policyValue) {
+                  setErrors({...errors, policyValue: ''});
+                }
+              }}
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm ${
+                errors.policyValue 
+                  ? 'border-red-300 focus:border-red-500' 
+                  : 'border-gray-300 focus:border-indigo-500'
+              }`}
               placeholder="100000"
+              min="0"
+              step="0.01"
+              required
             />
+            {errors.policyValue && (
+              <p className="mt-1 text-sm text-red-600">{errors.policyValue}</p>
+            )}
           </div>
           
           {/* Agent Dropdown */}
           <div>
             <label htmlFor="agentId" className="block text-sm font-medium text-gray-700">
-              Selling Agent
+              Selling Agent *
             </label>
             <select
               id="agentId"
               value={selectedAgentId}
-              onChange={(e) => setSelectedAgentId(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              onChange={(e) => {
+                setSelectedAgentId(e.target.value);
+                if (errors.selectedAgentId) {
+                  setErrors({...errors, selectedAgentId: ''});
+                }
+              }}
+              className={`mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-indigo-500 sm:text-sm ${
+                errors.selectedAgentId 
+                  ? 'border-red-300 focus:border-red-500' 
+                  : 'border-gray-300 focus:border-indigo-500'
+              }`}
+              required
             >
               {agents.length === 0 ? (
-                <option>Loading agents...</option>
+                <option value="">Loading agents...</option>
               ) : (
                 agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
@@ -130,6 +228,9 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
                 ))
               )}
             </select>
+            {errors.selectedAgentId && (
+              <p className="mt-1 text-sm text-red-600">{errors.selectedAgentId}</p>
+            )}
           </div>
         </div>
         
@@ -144,9 +245,14 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
           </button>
           
           {message && (
-            <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-              {message}
-            </p>
+            <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-md ${
+              isError 
+                ? 'bg-red-50 text-red-800 border border-red-200' 
+                : 'bg-green-50 text-green-800 border border-green-200'
+            }`}>
+              {isError ? '✗' : '✓'}
+              <span>{message}</span>
+            </div>
           )}
         </div>
       </form>
