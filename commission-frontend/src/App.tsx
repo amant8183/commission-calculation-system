@@ -63,25 +63,42 @@ function App() {
     });
   }, [fetchHierarchy, fetchSales, fetchBonuses]); // Add fetchBonuses dependency
 
-  // 4. Function to trigger bonus calculation
-  const handleCalculateBonuses = useCallback(async () => {
-  setCalcMessage('Calculating...');
-  const now = new Date();
-  const periodStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`; 
+  // 4. Function to trigger bonus calculation (generic for all types)
+  const handleCalculateBonuses = useCallback(async (bonusType: 'Monthly' | 'Quarterly' | 'Annual', period: string) => {
+    setCalcMessage('Calculating...');
 
-  try {
-    const response = await axios.post(`${API_URL}/bonuses/calculate`, {
-      period: periodStr,
-      type: 'Monthly'
-    });
-    setCalcMessage(response.data.message || 'Calculation complete!');
-    await fetchBonuses(); 
-    await fetchSummary(); 
-  } catch (error) {
-    console.error("Failed to calculate bonuses:", error);
-    setCalcMessage('Calculation failed.');
-  }
-}, [fetchBonuses, fetchSummary]);
+    try {
+      const response = await axios.post(`${API_URL}/bonuses/calculate`, {
+        period: period,
+        type: bonusType
+      });
+      setCalcMessage(response.data.message || 'Calculation complete!');
+      await fetchBonuses(); 
+      await fetchSummary(); 
+    } catch (error) {
+      console.error("Failed to calculate bonuses:", error);
+      setCalcMessage('Calculation failed.');
+    }
+  }, [fetchBonuses, fetchSummary]);
+
+  // Helper functions for each bonus type
+  const handleMonthlyBonus = () => {
+    const now = new Date();
+    const periodStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    handleCalculateBonuses('Monthly', periodStr);
+  };
+
+  const handleQuarterlyBonus = (quarter: number) => {
+    const now = new Date();
+    const periodStr = `${now.getFullYear()}-Q${quarter}`;
+    handleCalculateBonuses('Quarterly', periodStr);
+  };
+
+  const handleAnnualBonus = () => {
+    const now = new Date();
+    const periodStr = `${now.getFullYear()}`;
+    handleCalculateBonuses('Annual', periodStr);
+  };
 
   // Callback for when a sale is added
   const onSaleAdded = () => {
@@ -109,19 +126,77 @@ function App() {
 
         <SalesForm onSaleAdded={onSaleAdded} />
 
-        {/* 5. Add Bonus Calculation Button */}
-        <div className="my-6 p-4 bg-white rounded-lg shadow-md flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-700">Calculate Monthly Bonuses</h2>
-            <div>
+        {/* 5. Bonus Calculation Section */}
+        <div className="my-6 p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Calculate Bonuses</h2>
+          
+          {/* Monthly Bonuses */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-600 mb-2">Monthly Bonuses</h3>
+            <button
+              onClick={handleMonthlyBonus}
+              className="inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400"
+              disabled={calcMessage === 'Calculating...'}
+            >
+              Calculate Current Month
+            </button>
+          </div>
+
+          {/* Quarterly Bonuses */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-600 mb-2">Quarterly Bonuses</h3>
+            <div className="flex gap-2">
               <button
-                onClick={handleCalculateBonuses}
-                className="inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400"
+                onClick={() => handleQuarterlyBonus(1)}
+                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
                 disabled={calcMessage === 'Calculating...'}
               >
-                Calculate for Current Month
+                Q1
               </button>
-              {calcMessage && <p className="text-sm text-gray-600 ml-4 inline">{calcMessage}</p>}
+              <button
+                onClick={() => handleQuarterlyBonus(2)}
+                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
+                disabled={calcMessage === 'Calculating...'}
+              >
+                Q2
+              </button>
+              <button
+                onClick={() => handleQuarterlyBonus(3)}
+                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
+                disabled={calcMessage === 'Calculating...'}
+              >
+                Q3
+              </button>
+              <button
+                onClick={() => handleQuarterlyBonus(4)}
+                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
+                disabled={calcMessage === 'Calculating...'}
+              >
+                Q4
+              </button>
             </div>
+          </div>
+
+          {/* Annual Bonuses */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-600 mb-2">Annual Bonuses</h3>
+            <button
+              onClick={handleAnnualBonus}
+              className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:bg-gray-400"
+              disabled={calcMessage === 'Calculating...'}
+            >
+              Calculate Current Year
+            </button>
+          </div>
+
+          {/* Status Message */}
+          {calcMessage && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-md">
+              <p className={`text-sm ${calcMessage.includes('failed') ? 'text-red-600' : 'text-green-600'}`}>
+                {calcMessage}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
