@@ -222,7 +222,7 @@ function App() {
           <div className="p-4 bg-white rounded-lg shadow-md lg:col-span-1">
              <h2 className="text-xl font-semibold mb-4 text-gray-700">Hierarchy View</h2>
              {loading ? (<p>Loading hierarchy...</p>) 
-             : hierarchy.length > 0 ? (hierarchy.map(agent => (<AgentNode key={agent.id} agent={agent} />))) 
+             : hierarchy.length > 0 ? (hierarchy.map(agent => (<AgentNode key={agent.id} agent={agent} onUpdate={fetchHierarchy} />))) 
              : (<p className="text-gray-500">No agents found.</p>)}
           </div>
 

@@ -226,6 +226,109 @@ def get_agents():
         app.logger.error(f"Error fetching agents: {e}", exc_info=True)
         return jsonify({"error": "An internal error occurred while fetching agents"}), 500
 
+
+@app.route("/api/agents/<int:agent_id>", methods=["PUT"])
+def update_agent(agent_id):
+    """Updates an existing agent's details."""
+    try:
+        agent = db.session.get(Agent, agent_id)
+        if not agent:
+            return jsonify({"error": "Agent not found"}), 404
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
+        
+        # Update name if provided
+        if "name" in data:
+            if not isinstance(data["name"], str) or not data["name"].strip():
+                return jsonify({"error": "Agent name must be a non-empty string"}), 400
+            agent.name = data["name"].strip()
+        
+        # Update level if provided
+        if "level" in data:
+            if not isinstance(data["level"], int) or data["level"] not in [1, 2, 3, 4]:
+                return jsonify({"error": "Agent level must be 1, 2, 3, or 4"}), 400
+            
+            # Check if level change would violate hierarchy rules
+            # Parent must be at higher level than child
+            if agent.parent_id:
+                parent = db.session.get(Agent, agent.parent_id)
+                if parent and parent.level <= data["level"]:
+                    return jsonify({"error": "Cannot update level: parent must be at a higher level"}), 400
+            
+            # Check if any children would violate hierarchy rules
+            for child in agent.children:
+                if child.level >= data["level"]:
+                    return jsonify({"error": f"Cannot update level: child agent {child.name} (Level {child.level}) must be at a lower level"}), 400
+            
+            agent.level = data["level"]
+        
+        # Update parent_id if provided
+        if "parent_id" in data:
+            parent_id = data["parent_id"]
+            
+            # Allow setting parent_id to None (making it a top-level agent)
+            if parent_id is not None:
+                if not isinstance(parent_id, int):
+                    return jsonify({"error": "Parent ID must be an integer or null"}), 400
+                
+                # Check if parent exists
+                parent_agent = db.session.get(Agent, parent_id)
+                if not parent_agent:
+                    return jsonify({"error": f"Parent agent with ID {parent_id} not found"}), 404
+                
+                # Check for circular reference (cannot set parent to self or descendants)
+                if parent_id == agent_id:
+                    return jsonify({"error": "Agent cannot be its own parent"}), 400
+                
+                descendant_ids = get_downline_agent_ids(agent_id, db.session)
+                if parent_id in descendant_ids:
+                    return jsonify({"error": "Cannot create circular reference: parent cannot be a descendant"}), 400
+                
+                # Validate hierarchy rules: parent must be at higher level
+                if parent_agent.level <= agent.level:
+                    return jsonify({"error": "Parent agent must be at a higher level than the child agent"}), 400
+            
+            agent.parent_id = parent_id
+        
+        db.session.commit()
+        return jsonify(agent.to_dict()), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating agent: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while updating the agent"}), 500
+
+
+@app.route("/api/agents/<int:agent_id>", methods=["DELETE"])
+def delete_agent(agent_id):
+    """Deletes an agent. Prevents deletion if agent has sales or children."""
+    try:
+        agent = db.session.get(Agent, agent_id)
+        if not agent:
+            return jsonify({"error": "Agent not found"}), 404
+        
+        # Check if agent has any sales
+        sales_count = db.session.scalar(select(func.count(Sale.id)).where(Sale.agent_id == agent_id))
+        if sales_count > 0:
+            return jsonify({"error": f"Cannot delete agent: agent has {sales_count} associated sales"}), 400
+        
+        # Check if agent has any children
+        children_count = db.session.scalar(select(func.count(Agent.id)).where(Agent.parent_id == agent_id))
+        if children_count > 0:
+            return jsonify({"error": f"Cannot delete agent: agent has {children_count} child agents. Remove or reassign children first."}), 400
+        
+        # Safe to delete
+        db.session.delete(agent)
+        db.session.commit()
+        return jsonify({"message": "Agent deleted successfully"}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting agent: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while deleting the agent"}), 500
+
 # --- Commission Calculation Logic ---
 
 # Define the commission rates
@@ -434,57 +537,72 @@ def cancel_sale(sale_id):
             )
             db.session.add(clawback_record)
 
-        # --- Bonus Clawback/Recalculation (Monthly Only for now) ---
+        # --- Bonus Clawback/Recalculation (Monthly, Quarterly, Annual) ---
         # Find all agents involved in the original sale (seller + upline)
         # We can use the HierarchySnapshot for this
         snapshot_stmt = select(HierarchySnapshot.agent_id).where(HierarchySnapshot.sale_id == sale_id)
         affected_agent_ids = db.session.scalars(snapshot_stmt).unique().all()
 
-        # Determine the period of the sale (Year-Month)
+        # Determine the periods of the sale
         sale_year = sale_to_cancel.sale_date.year
         sale_month = sale_to_cancel.sale_date.month
-        period_str = f"{sale_year}-{sale_month:02d}"
+        
+        # Calculate which quarter the sale falls into
+        sale_quarter = (sale_month - 1) // 3 + 1
+        
+        # Define periods for each bonus type
+        monthly_period = f"{sale_year}-{sale_month:02d}"
+        quarterly_period = f"{sale_year}-Q{sale_quarter}"
+        annual_period = f"{sale_year}"
+        
+        # Process clawbacks for all three bonus types
+        bonus_types_and_periods = [
+            ('Monthly', monthly_period, sale_year, sale_month, None),
+            ('Quarterly', quarterly_period, sale_year, None, sale_quarter),
+            ('Annual', annual_period, sale_year, None, None)
+        ]
 
-        for agent_id in affected_agent_ids:
-            agent = db.session.get(Agent, agent_id)
-            if not agent: continue # Skip if agent somehow doesn't exist
+        for bonus_type, period_str, year, month, quarter in bonus_types_and_periods:
+            for agent_id in affected_agent_ids:
+                agent = db.session.get(Agent, agent_id)
+                if not agent: 
+                    continue # Skip if agent somehow doesn't exist
 
-            # Find the original bonus calculation for this agent and period
-            original_bonus_stmt = select(Bonus).where(
-                and_(Bonus.agent_id == agent_id, Bonus.period == period_str, Bonus.bonus_type == 'Monthly')
-            )
-            original_bonus = db.session.scalar(original_bonus_stmt)
+                # Find the original bonus calculation for this agent and period
+                original_bonus_stmt = select(Bonus).where(
+                    and_(Bonus.agent_id == agent_id, Bonus.period == period_str, Bonus.bonus_type == bonus_type)
+                )
+                original_bonus = db.session.scalar(original_bonus_stmt)
 
-            if original_bonus:
-                # Recalculate the volume *after* cancellation
-                # Note: get_monthly_sales_volume already excludes cancelled sales
-                new_volume = 0
-                if agent.level == 1:
-                    new_volume = get_monthly_sales_volume(agent_ids_list=[agent.id], year=sale_year, month=sale_month, db_session=db.session)
-                else:
-                    downline_ids = get_downline_agent_ids(agent.id, db.session)
-                    new_volume = get_monthly_sales_volume(year=sale_year, month=sale_month, db_session=db.session, agent_ids_list=downline_ids)
+                if original_bonus:
+                    # Recalculate the volume *after* cancellation
+                    # Note: volume functions already exclude cancelled sales
+                    new_volume = 0
+                    agent_ids_to_sum = [agent.id] if agent.level == 1 else get_downline_agent_ids(agent.id, db.session)
+                    
+                    # Calculate volume based on bonus type
+                    if bonus_type == 'Monthly':
+                        new_volume = get_monthly_sales_volume(agent_ids_list=agent_ids_to_sum, year=year, month=month, db_session=db.session)
+                    elif bonus_type == 'Quarterly':
+                        new_volume = get_quarterly_sales_volume(agent_ids_list=agent_ids_to_sum, year=year, quarter=quarter, db_session=db.session)
+                    elif bonus_type == 'Annual':
+                        new_volume = get_annual_sales_volume(agent_ids_list=agent_ids_to_sum, year=year, db_session=db.session)
 
-                # Recalculate the expected bonus amount based on the new volume
-                new_bonus_rate = get_bonus_rate_for_volume(agent.level, new_volume, db.session)
-                new_expected_bonus_amount = new_volume * new_bonus_rate
+                    # Recalculate the expected bonus amount based on the new volume
+                    new_bonus_rate = get_bonus_rate_for_volume(agent.level, new_volume, db.session)
+                    new_expected_bonus_amount = new_volume * new_bonus_rate
 
-                # Calculate the adjustment needed
-                bonus_adjustment = new_expected_bonus_amount - original_bonus.amount
+                    # Calculate the adjustment needed
+                    bonus_adjustment = new_expected_bonus_amount - original_bonus.amount
 
-                # If an adjustment is needed, create a clawback record
-                if abs(bonus_adjustment) > 0.001: # Use a small tolerance for float comparison
-                    bonus_clawback = Clawback(
-                        amount=bonus_adjustment, # Store the adjustment (can be negative)
-                        original_bonus_id=original_bonus.id, # Link to the original bonus
-                        sale_id=sale_id # Link to the sale that triggered it
-                    )
-                    db.session.add(bonus_clawback)
-
-                    # Optional: Update the original bonus record? 
-                    # Or just rely on clawbacks for adjustments? 
-                    # Let's rely on clawbacks for now as per the brief.
-                    # original_bonus.amount = new_expected_bonus_amount # Uncomment to update original record
+                    # If an adjustment is needed, create a clawback record
+                    if abs(bonus_adjustment) > 0.001: # Use a small tolerance for float comparison
+                        bonus_clawback = Clawback(
+                            amount=bonus_adjustment, # Store the adjustment (can be negative)
+                            original_bonus_id=original_bonus.id, # Link to the original bonus
+                            sale_id=sale_id # Link to the sale that triggered it
+                        )
+                        db.session.add(bonus_clawback)
 
         # Commit sale cancellation, commission clawbacks, and bonus clawbacks
         db.session.commit() 
