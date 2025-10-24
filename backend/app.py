@@ -156,32 +156,75 @@ def create_tables():
 # --- Agent CRUD API Endpoints ---
 @app.route("/api/agents", methods=["POST"])
 def add_agent():
-    data = request.get_json()
-    new_agent = Agent(
-        name=data["name"], level=data["level"], parent_id=data.get("parent_id")
-    )
-    db.session.add(new_agent)
-    db.session.commit()
-    return jsonify(new_agent.to_dict()), 201
+    try:
+        data = request.get_json()
+        
+        # Validation
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
+        
+        if not data.get("name") or not isinstance(data.get("name"), str):
+            return jsonify({"error": "Agent name is required and must be a string"}), 400
+        
+        if not data.get("level") or not isinstance(data.get("level"), int):
+            return jsonify({"error": "Agent level is required and must be an integer"}), 400
+        
+        if data.get("level") not in [1, 2, 3, 4]:
+            return jsonify({"error": "Agent level must be 1 (Agent), 2 (Team Lead), 3 (Manager), or 4 (Director)"}), 400
+        
+        # Validate parent_id if provided
+        parent_id = data.get("parent_id")
+        if parent_id is not None:
+            parent_agent = db.session.get(Agent, parent_id)
+            if not parent_agent:
+                return jsonify({"error": f"Parent agent with ID {parent_id} not found"}), 404
+            
+            # Validate hierarchy rules: parent must be higher level (higher number)
+            if parent_agent.level <= data.get("level"):
+                return jsonify({"error": "Parent agent must be at a higher level than the child agent"}), 400
+        
+        new_agent = Agent(
+            name=data["name"].strip(), 
+            level=data["level"], 
+            parent_id=parent_id
+        )
+        db.session.add(new_agent)
+        db.session.commit()
+        return jsonify(new_agent.to_dict()), 201
+        
+    except KeyError as e:
+        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error adding agent: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while adding the agent"}), 500
 
 
 @app.route("/api/agents", methods=["GET"])
 def get_agents():
-    # Check if a 'level' query parameter is provided
-    level_filter = request.args.get('level', type=int)
+    try:
+        # Check if a 'level' query parameter is provided
+        level_filter = request.args.get('level', type=int)
 
-    if level_filter:
-        # Get all agents matching that level
-        stmt = select(Agent).filter_by(level=level_filter)
-        agents = db.session.scalars(stmt).all()
-        # Return a flat list of these agents
-        return jsonify([agent.to_dict() for agent in agents])
+        if level_filter:
+            # Validate level filter
+            if level_filter not in [1, 2, 3, 4]:
+                return jsonify({"error": "Level filter must be 1, 2, 3, or 4"}), 400
+            
+            # Get all agents matching that level
+            stmt = select(Agent).filter_by(level=level_filter)
+            agents = db.session.scalars(stmt).all()
+            # Return a flat list of these agents
+            return jsonify([agent.to_dict() for agent in agents])
 
-    # If no level is specified, return the full hierarchy (original behavior)
-    stmt = select(Agent).filter_by(parent_id=None)
-    top_level_agents = db.session.scalars(stmt).all()
-    hierarchy = [agent.to_dict(include_children=True) for agent in top_level_agents]
-    return jsonify(hierarchy)
+        # If no level is specified, return the full hierarchy (original behavior)
+        stmt = select(Agent).filter_by(parent_id=None)
+        top_level_agents = db.session.scalars(stmt).all()
+        hierarchy = [agent.to_dict(include_children=True) for agent in top_level_agents]
+        return jsonify(hierarchy)
+    except Exception as e:
+        app.logger.error(f"Error fetching agents: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while fetching agents"}), 500
 
 # --- Commission Calculation Logic ---
 
@@ -237,15 +280,37 @@ def create_sale():
     Records a new sale and triggers all commission and snapshot calculations.
     """
     data = request.get_json()
-    if (
-        not data
-        or not data.get("policy_number")
-        or not data.get("policy_value")
-        or not data.get("agent_id")
-    ):
-        return jsonify({"error": "Missing required sale data"}), 400
+    
+    # Enhanced validation
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+    
+    if not data.get("policy_number") or not isinstance(data.get("policy_number"), str):
+        return jsonify({"error": "Policy number is required and must be a string"}), 400
+    
+    # Check if policy_value exists in data (allowing 0 as a value)
+    if "policy_value" not in data or data.get("policy_value") is None:
+        return jsonify({"error": "Policy value is required and must be a number"}), 400
+    
+    if not isinstance(data.get("policy_value"), (int, float)):
+        return jsonify({"error": "Policy value is required and must be a number"}), 400
+    
+    if data.get("policy_value") <= 0:
+        return jsonify({"error": "Policy value must be greater than zero"}), 400
+    
+    if not data.get("agent_id") or not isinstance(data.get("agent_id"), int):
+        return jsonify({"error": "Agent ID is required and must be an integer"}), 400
 
     try:
+        # Verify agent exists
+        agent = db.session.get(Agent, data["agent_id"])
+        if not agent:
+            return jsonify({"error": f"Agent with ID {data['agent_id']} not found"}), 404
+        
+        # Check for duplicate policy number
+        existing_sale = db.session.query(Sale).filter_by(policy_number=data["policy_number"]).first()
+        if existing_sale:
+            return jsonify({"error": f"Policy number {data['policy_number']} already exists"}), 409
         # 1. Save the Sale
         new_sale = Sale(
             policy_number=data["policy_number"],
@@ -304,7 +369,8 @@ def create_sale():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error creating sale: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while recording the sale"}), 500
     
 
 @app.route("/api/sales", methods=["GET"])
@@ -336,7 +402,8 @@ def get_sales():
         return jsonify(sales_list)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error fetching sales: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while fetching sales"}), 500
         
 @app.route('/api/sales/<int:sale_id>/cancel', methods=['PUT'])
 def cancel_sale(sale_id):
@@ -651,4 +718,5 @@ def get_bonuses():
         return jsonify(bonuses_list)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error fetching bonuses: {e}", exc_info=True)
+        return jsonify({"error": "An internal error occurred while fetching bonuses"}), 500
