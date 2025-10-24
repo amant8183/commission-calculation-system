@@ -45,8 +45,8 @@ describe('SalesForm Component', () => {
     // Use findByRole for async elements
     await waitFor(() => {
       expect(screen.getByRole('option', { name: /Sarah \(Agent\)/i })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /John \(Agent\)/i })).toBeInTheDocument();
     });
+    expect(screen.getByRole('option', { name: /John \(Agent\)/i })).toBeInTheDocument();
   });
 
   it('submits the form data correctly and calls onSaleAdded', async () => {

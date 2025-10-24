@@ -80,7 +80,7 @@ describe('App Component', () => {
     await waitFor(() => {
       // Check that the loading is gone and no data is present
       expect(screen.queryByText(/Loading hierarchy.../i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Mike \(Director\)/i)).not.toBeInTheDocument();
     });
+    expect(screen.queryByText(/Mike \(Director\)/i)).not.toBeInTheDocument();
   });
 });
