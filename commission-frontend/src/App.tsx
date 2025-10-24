@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import AgentNode, { Agent } from './components/AgentNode';
+import AgentForm from './components/AgentForm';
 import SalesForm from './components/SalesForm';
 import SalesList, { Sale } from './components/SalesList';
 import BonusList, { Bonus } from './components/BonusList';
 import DashboardSummary, { SummaryData } from './components/DashboardSummary';
 import SalesChart from './components/SalesChart';
+import CommissionReports from './components/CommissionReports/CommissionReports';
+import ClawbackManagement from './components/ClawbackManagement/ClawbackManagement';
   
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -108,6 +111,12 @@ function App() {
     fetchSales(); // Refresh sales list
     fetchSummary();
   };
+
+  // Callback for when an agent is added
+  const onAgentAdded = () => {
+    fetchHierarchy(); // Refresh hierarchy
+    fetchSummary(); // Refresh summary (agent count)
+  };
   
   // --- 2. ADD CANCELLATION HANDLER ---
   const handleCancelSale = useCallback(async (saleId: number) => {
@@ -129,6 +138,9 @@ function App() {
 
         {/* Dashboard Summary */}
         <DashboardSummary summary={summaryData} loading={loading} />
+
+        {/* Agent Management Section */}
+        <AgentForm onAgentAdded={onAgentAdded} />
 
         <SalesForm onSaleAdded={onSaleAdded} />
 
@@ -227,6 +239,16 @@ function App() {
           {/* 7. Sales Chart */}
           <div className="lg:col-span-3">
             {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading chart...</p></div>) : (<SalesChart sales={sales} />)}
+          </div>
+
+          {/* 8. Commission Reports */}
+          <div className="lg:col-span-3">
+            {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading reports...</p></div>) : (<CommissionReports sales={sales} bonuses={bonuses} />)}
+          </div>
+
+          {/* 9. Clawback Management */}
+          <div className="lg:col-span-3">
+            {loading ? (<div className="p-4 bg-white rounded-lg shadow-md"><p>Loading clawback management...</p></div>) : (<ClawbackManagement sales={sales} onCancelSale={handleCancelSale} />)}
           </div>
         </div>
       </div>
