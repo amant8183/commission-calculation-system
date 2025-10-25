@@ -10,7 +10,7 @@ app = Flask(__name__)
 # CORS configuration - allow frontend domain
 allowed_origins = [
     "http://localhost:3000",  # Local development
-    "https://*.vercel.app",  # Vercel deployments
+    "https://commission-calculation-system-beta.vercel.app",  # Vercel deployment
 ]
 
 # If FRONTEND_URL is set in environment, use it
