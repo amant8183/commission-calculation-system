@@ -8,6 +8,8 @@ import {
   ArrowUturnLeftIcon,
   Bars3Icon,
   XMarkIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -20,6 +22,10 @@ const navigation = [
   { name: 'Sales Management', href: '/sales', icon: ShoppingCartIcon },
   { name: 'Commission Reports', href: '/reports', icon: DocumentChartBarIcon },
   { name: 'Clawback Management', href: '/clawbacks', icon: ArrowUturnLeftIcon },
+];
+
+const generalNavigation = [
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -37,71 +43,141 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           onClick={() => setSidebarOpen(false)}
         />
         <div
-          className={`fixed inset-y-0 left-0 flex w-64 flex-col bg-gradient-to-b from-indigo-900 to-indigo-800 transform transition-transform ${
+          className={`fixed inset-y-0 left-0 flex w-64 flex-col bg-[#1a1a1a] transform transition-transform ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between px-4 py-5">
+          <div className="flex items-center justify-between px-6 py-5">
             <h1 className="text-xl font-bold text-white">Commission System</h1>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-indigo-200 hover:text-white"
+              className="text-gray-400 hover:text-white"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
-          <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`group flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-indigo-700 text-white shadow-lg'
-                      : 'text-indigo-100 hover:bg-indigo-700 hover:text-white'
-                  }`}
+          
+          {/* Mobile Navigation */}
+          <div className="flex-1 px-4 py-4">
+            <div className="mb-6">
+              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
+              <nav className="space-y-1">
+                {navigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* General Section */}
+            <div>
+              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">GENERAL</h2>
+              <nav className="space-y-1">
+                {generalNavigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+                <button
+                  className="w-full group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
                 >
-                  <item.icon className="mr-3 h-6 w-6 flex-shrink-0" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
+                  <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0" />
+                  Log out
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-gradient-to-b from-indigo-900 to-indigo-800 overflow-y-auto shadow-xl">
-          <div className="flex items-center flex-shrink-0 px-4 py-6">
-            <h1 className="text-2xl font-bold text-white">Commission System</h1>
+        <div className="flex flex-col flex-grow bg-[#1a1a1a] overflow-y-auto">
+          <div className="flex items-center flex-shrink-0 px-6 py-6">
+            <h1 className="text-2xl font-bold text-white">Commission <span className="text-blue-500">System</span></h1>
           </div>
-          <nav className="flex-1 space-y-1 px-3 py-4">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`group flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-indigo-700 text-white shadow-lg transform scale-105'
-                      : 'text-indigo-100 hover:bg-indigo-700 hover:text-white hover:scale-105'
-                  }`}
+          
+          <div className="flex-1 px-4 py-2">
+            {/* MENU Section */}
+            <div className="mb-8">
+              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
+              <nav className="space-y-1">
+                {navigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* GENERAL Section */}
+            <div>
+              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">GENERAL</h2>
+              <nav className="space-y-1">
+                {generalNavigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+                <button
+                  className="w-full group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
+                  onClick={() => alert('Logout functionality')}
                 >
-                  <item.icon className="mr-3 h-6 w-6 flex-shrink-0" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="flex-shrink-0 flex border-t border-indigo-700 p-4">
-            <div className="w-full">
-              <p className="text-sm text-indigo-200">Insurance Commission</p>
-              <p className="text-xs text-indigo-300 mt-1">v1.0.0</p>
+                  <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0" />
+                  Log out
+                </button>
+              </nav>
             </div>
           </div>
         </div>
