@@ -21,7 +21,8 @@ const levelColors: { [key: number]: string } = {
   4: 'border-purple-400',
 };
 
-const API_URL = 'http://127.0.0.1:5000/api';
+const API_URL =
+  process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000/api';
 
 const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
   const color = levelColors[agent.level] || 'border-gray-400';

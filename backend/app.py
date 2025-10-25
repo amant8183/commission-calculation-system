@@ -3,11 +3,25 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, select, and_
 from flask_cors import CORS
 from datetime import datetime, timezone
+import os
 
 app = Flask(__name__)
-CORS(app)
 
+# CORS configuration - allow frontend domain
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+    "https://*.vercel.app",  # Vercel deployments
+]
+
+# If FRONTEND_URL is set in environment, use it
+if os.getenv("FRONTEND_URL"):
+    allowed_origins.append(os.getenv("FRONTEND_URL"))
+
+CORS(app, origins=allowed_origins, supports_credentials=True)
+
+# Database configuration - SQLite for both development and production
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///commission.db"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 

@@ -184,6 +184,112 @@ The frontend will open at `http://localhost:3000`
 
 ---
 
+## 🌐 Deployment
+
+### Deploying to Production
+
+This application is configured for easy deployment using:
+- **Frontend**: Vercel (recommended)
+- **Backend**: Render (recommended)
+
+### Deploy Frontend to Vercel
+
+1. **Push your code to GitHub**
+   ```bash
+   git push origin main
+   ```
+
+2. **Sign up/Login to Vercel**
+   - Visit [vercel.com](https://vercel.com)
+   - Connect your GitHub account
+
+3. **Import Project**
+   - Click "Add New Project"
+   - Select your GitHub repository
+   - Set root directory to `commission-frontend`
+   - Framework preset: Create React App
+
+4. **Configure Environment Variables**
+   - Add environment variable:
+     ```
+     REACT_APP_API_URL=https://your-backend.onrender.com/api
+     ```
+   - Replace `your-backend` with your actual Render service URL
+
+5. **Deploy**
+   - Click "Deploy"
+   - Wait 2-3 minutes for build to complete
+   - Your app will be live at `https://your-app.vercel.app`
+
+### Deploy Backend to Render
+
+1. **Sign up/Login to Render**
+   - Visit [render.com](https://render.com)
+   - Connect your GitHub account
+
+2. **Create New Web Service**
+   - Click "New +" → "Web Service"
+   - Select your GitHub repository
+   - Configure:
+     - **Name**: commission-api (or your choice)
+     - **Root Directory**: `backend`
+     - **Runtime**: Python 3
+     - **Build Command**: `pip install -r requirements.txt`
+     - **Start Command**: `gunicorn app:app`
+     - **Plan**: Free
+
+3. **Add Disk Storage (Important for SQLite)**
+   - In service settings, go to "Disks"
+   - Click "Add Disk"
+   - **Mount Path**: `/opt/render/project/src/backend`
+   - **Size**: 1 GB (free tier)
+   - This ensures your SQLite database persists between deployments
+
+4. **Configure Environment Variables**
+   - Go to "Environment" tab
+   - Add:
+     ```
+     FRONTEND_URL=https://your-app.vercel.app
+     PYTHON_VERSION=3.11.0
+     ```
+
+5. **Deploy**
+   - Click "Create Web Service"
+   - Wait 5-10 minutes for initial deploy
+   - Your API will be live at `https://your-backend.onrender.com`
+
+6. **Initialize Database**
+   - First time only: Visit `https://your-backend.onrender.com/api/dashboard/summary`
+   - This triggers database creation and tier seeding
+
+### Update Frontend with Backend URL
+
+1. Go back to Vercel project settings
+2. Update `REACT_APP_API_URL` with your actual Render URL
+3. Redeploy frontend (automatic on save)
+
+### Production URLs
+
+After deployment, your application will be accessible at:
+- **Frontend**: `https://your-app.vercel.app`
+- **Backend API**: `https://your-backend.onrender.com/api`
+
+### Important Notes
+
+⚠️ **Free Tier Limitations**:
+- Render free tier services sleep after 15 minutes of inactivity
+- First request after sleep takes ~30-60 seconds to wake up
+- Vercel has no sleep - frontend is always fast
+- SQLite is suitable for demo/testing but not high-concurrency production
+
+✅ **For Production Use**:
+- Upgrade Render to paid tier ($7/month) for always-on service
+- Consider migrating to PostgreSQL for better concurrency
+- Add authentication and authorization
+- Enable HTTPS (automatic on both platforms)
+
+---
+
 ## 🗄️ Database Schema
 
 ### Entity Relationship Diagram

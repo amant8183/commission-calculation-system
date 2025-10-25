@@ -12,7 +12,8 @@ import { Sale } from './components/SalesList';
 import { Bonus } from './components/BonusList';
 import { SummaryData } from './components/DashboardSummary';
 
-const API_URL = 'http://127.0.0.1:5000/api';
+const API_URL =
+  process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000/api';
 
 function App() {
   const [hierarchy, setHierarchy] = useState<Agent[]>([]);
