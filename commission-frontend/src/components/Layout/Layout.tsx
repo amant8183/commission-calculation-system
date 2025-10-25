@@ -9,6 +9,8 @@ import {
   Bars3Icon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import logo from '../../logo.png';
+import './Layout.css';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, var(--color-bgBase), var(--color-bgDark), var(--color-bgBase))' }}>
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? '' : 'pointer-events-none'}`}>
         <div
@@ -37,24 +39,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           onClick={() => setSidebarOpen(false)}
         />
         <div
-          className={`fixed inset-y-0 left-0 flex w-64 flex-col bg-[#1a1a1a] transform transition-transform ${
+          className={`fixed inset-y-0 left-0 flex w-64 flex-col transform transition-transform bg-bgsidebar ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <div className="flex items-center justify-between px-6 py-5">
-            <h1 className="text-xl font-bold text-white">Commission System</h1>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Logo" className="h-9 w-9" />
+              <h1 className="text-xl font-bold text-textprimary">Commission <span className="text-primary">System</span></h1>
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-gray-400 hover:text-white"
+              className="transition-colors text-textmuted hover:text-textprimary"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
           
           {/* Mobile Navigation */}
-          <div className="flex-1 px-4 py-4">
-            <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
-            <nav className="space-y-1">
+          <div className="flex-1 py-6">
+            <h2 className="px-6 text-xs font-semibold uppercase tracking-wider mb-6 text-textSubtle">MENU</h2>
+            <nav>
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
@@ -62,13 +67,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    }`}
+                    className={`group flex items-center px-6 text-sm font-medium transition-all duration-200 ` }
+                    style={{
+                      paddingTop: '14px',
+                      paddingBottom: '14px',
+                      backgroundColor: isActive ? 'var(--color-bgDark)' : 'transparent',
+                      color: isActive ? 'var(--color-textPrimary)' : 'var(--color-textMuted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--color-bgCardHover)';
+                        e.currentTarget.style.color = 'var(--color-textPrimary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--color-textMuted)';
+                      }
+                    }}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-transform duration-200 ${
+                      isActive ? '' : 'group-hover:scale-110'
+                    }`} />
                     {item.name}
                   </Link>
                 );
@@ -79,28 +100,43 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:p-4">
-        <div className="flex flex-col flex-grow bg-[#1a1a1a] overflow-y-auto rounded-2xl shadow-2xl">
-          <div className="flex items-center flex-shrink-0 px-6 py-6">
-            <h1 className="text-2xl font-bold text-white">Commission <span className="text-blue-500">System</span></h1>
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-col flex-grow overflow-y-auto bg-bgsidebar">
+          <div className="flex items-center flex-shrink-0 px-6 py-6 gap-3">
+            <img src={logo} alt="Logo" className="h-9 w-9" />
+            <h1 className="text-xl font-bold text-textprimary">Commission <span className="text-primary">System</span></h1>
           </div>
           
-          <div className="flex-1 px-4 py-2">
-            <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
-            <nav className="space-y-1">
+          <div className="flex-1 py-6">
+            <h2 className="px-6 text-xs font-semibold uppercase tracking-wider mb-3 text-textsubtl">MENU</h2>
+            <nav>
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    }`}
+                    className={`group flex py-5 items-center px-6 text-sm font-medium transition-all duration-200 ${isActive ? 'nav-link-active' : ''}`}
+                    style={{
+                      backgroundColor: isActive ? 'var(--color-bgDark)' : 'transparent',
+                      color: isActive ? 'var(--color-textPrimary)' : 'var(--color-textMuted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--color-bgCardHover)';
+                        e.currentTarget.style.color = 'var(--color-textPrimary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--color-textMuted)';
+                      }
+                    }}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-transform duration-200 ${
+                      isActive ? '' : 'group-hover:scale-110'
+                    }`} />
                     {item.name}
                   </Link>
                 );
@@ -113,15 +149,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top bar for mobile */}
-        <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow lg:hidden">
+        <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 backdrop-blur-md lg:hidden shadow-custom-lg" style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            className="px-4 focus:outline-none focus:ring-2 focus:ring-inset transition-colors text-textmuted hover:text-textprimary"
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
           <div className="flex-1 px-4 flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-gray-900">Commission System</h1>
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="Logo" className="h-7 w-7" />
+              <h1 className="text-lg font-semibold text-textprimary">Commission System</h1>
+            </div>
           </div>
         </div>
 

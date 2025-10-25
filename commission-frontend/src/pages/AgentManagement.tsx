@@ -11,8 +11,8 @@ const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdd
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Agent Management</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-3xl font-bold text-textprimary">Agent Management</h1>
+        <p className="mt-2 text-sm text-textmuted">
           Manage your sales team hierarchy and agent information
         </p>
       </div>
@@ -21,8 +21,8 @@ const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdd
       <AgentForm onAgentAdded={onAgentAdded} />
 
       {/* Agent Hierarchy Visualization */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Agent Hierarchy</h2>
+      <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
+        <h2 className="text-xl font-semibold mb-4 text-textprimary">Agent Hierarchy</h2>
         {hierarchy.length > 0 ? (
           <div className="space-y-2">
             {hierarchy.map((agent) => (
@@ -30,7 +30,7 @@ const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdd
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-center py-8 text-textsubtl">
             No agents yet. Add your first agent above.
           </p>
         )}

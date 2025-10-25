@@ -135,13 +135,13 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mb-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">Add New Agent</h2>
+    <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: 'var(--color-bgCard)', boxShadow: 'var(--shadow-xl)' }}>
+      <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-textPrimary)' }}>Add New Agent</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Agent Name */}
           <div>
-            <label htmlFor="agentName" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="agentName" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               Agent Name *
             </label>
             <input
@@ -154,29 +154,33 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
                   setErrors({...errors, name: ''});
                 }
               }}
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm ${
-                errors.name 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm"
+              style={{
+                backgroundColor: 'var(--color-bgInput)',
+                color: 'var(--color-textPrimary)'
+              }}
               placeholder="John Doe"
               required
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.name}</p>
             )}
           </div>
 
           {/* Agent Level */}
           <div>
-            <label htmlFor="agentLevel" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="agentLevel" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               Level *
             </label>
             <select
               id="agentLevel"
               value={level}
               onChange={(e) => setLevel(parseInt(e.target.value))}
-              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
+              style={{
+                backgroundColor: 'var(--color-bgInput)',
+                color: 'var(--color-textPrimary)'
+              }}
               required
             >
               <option value={1}>Level 1 - Agent</option>
@@ -188,7 +192,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
 
           {/* Parent Agent */}
           <div>
-            <label htmlFor="parentAgent" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="parentAgent" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               {level === 4 ? 'Parent Agent (N/A)' : 'Parent Agent *'}
             </label>
             <select
@@ -200,11 +204,12 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
                   setErrors({...errors, parentId: ''});
                 }
               }}
-              className={`mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-indigo-500 sm:text-sm ${
-                errors.parentId 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
+              style={{
+                backgroundColor: 'var(--color-bgInput)',
+                color: 'var(--color-textPrimary)',
+                opacity: (level === 4 || availableParents.length === 0) ? 0.5 : 1
+              }}
               disabled={level === 4 || availableParents.length === 0}
               required={level !== 4}
             >
@@ -221,10 +226,10 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               )}
             </select>
             {errors.parentId && (
-              <p className="mt-1 text-sm text-red-600">{errors.parentId}</p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.parentId}</p>
             )}
             {level !== 4 && availableParents.length === 0 && (
-              <p className="mt-1 text-sm text-amber-600">
+              <p className="mt-1 text-sm" style={{ color: 'var(--color-warning)' }}>
                 ⚠️ Create a {LEVEL_NAMES[level + 1 as keyof typeof LEVEL_NAMES]} first
               </p>
             )}
@@ -236,17 +241,24 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
           <button
             type="submit"
             disabled={loading || (level !== 4 && availableParents.length === 0)}
-            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-400"
+            className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 transition-colors"
+            style={{ 
+              backgroundColor: (loading || (level !== 4 && availableParents.length === 0)) ? 'var(--color-textSubtle)' : 'var(--color-primary)', 
+              color: 'var(--color-textPrimary)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
           >
             {loading ? 'Adding...' : 'Add Agent'}
           </button>
 
           {message && (
-            <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-md ${
-              isError 
-                ? 'bg-red-50 text-red-800 border border-red-200' 
-                : 'bg-green-50 text-green-800 border border-green-200'
-            }`}>
+            <div 
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-md"
+              style={{
+                backgroundColor: isError ? 'var(--color-dangerBg)' : 'var(--color-successBg)',
+                color: isError ? 'var(--color-dangerLight)' : 'var(--color-successLight)'
+              }}
+            >
               {isError ? '✗' : '✓'}
               <span>{message}</span>
             </div>

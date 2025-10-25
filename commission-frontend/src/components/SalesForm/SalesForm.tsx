@@ -135,13 +135,13 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mb-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">Record a New Sale</h2>
+    <div className="p-4 rounded-lg mb-6 bg-bgcard shadow-custom-xl">
+      <h2 className="text-xl font-semibold mb-4 text-textprimary">Record a New Sale</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Policy Number */}
           <div>
-            <label htmlFor="policyNumber" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="policyNumber" className="block text-sm font-medium text-textmuted">
               Policy Number *
             </label>
             <input
@@ -154,22 +154,18 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
                   setErrors({...errors, policyNumber: ''});
                 }
               }}
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm ${
-                errors.policyNumber 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm bg-bginput text-textprimary"
               placeholder="POL-12345"
               required
             />
             {errors.policyNumber && (
-              <p className="mt-1 text-sm text-red-600">{errors.policyNumber}</p>
+              <p className="mt-1 text-sm text-danger">{errors.policyNumber}</p>
             )}
           </div>
           
           {/* Policy Value */}
           <div>
-            <label htmlFor="policyValue" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="policyValue" className="block text-sm font-medium text-textmuted">
               Policy Value ($) *
             </label>
             <input
@@ -182,24 +178,20 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
                   setErrors({...errors, policyValue: ''});
                 }
               }}
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 sm:text-sm ${
-                errors.policyValue 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm bg-bginput text-textprimary"
               placeholder="100000"
               min="0"
               step="0.01"
               required
             />
             {errors.policyValue && (
-              <p className="mt-1 text-sm text-red-600">{errors.policyValue}</p>
+              <p className="mt-1 text-sm text-danger">{errors.policyValue}</p>
             )}
           </div>
           
           {/* Agent Dropdown */}
           <div>
-            <label htmlFor="agentId" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="agentId" className="block text-sm font-medium text-textmuted">
               Selling Agent *
             </label>
             <select
@@ -211,11 +203,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
                   setErrors({...errors, selectedAgentId: ''});
                 }
               }}
-              className={`mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-indigo-500 sm:text-sm ${
-                errors.selectedAgentId 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm bg-bginput text-textprimary"
               required
             >
               {agents.length === 0 ? (
@@ -229,7 +217,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
               )}
             </select>
             {errors.selectedAgentId && (
-              <p className="mt-1 text-sm text-red-600">{errors.selectedAgentId}</p>
+              <p className="mt-1 text-sm text-danger">{errors.selectedAgentId}</p>
             )}
           </div>
         </div>
@@ -239,17 +227,22 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-400"
+            className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 transition-colors shadow-custom-sm text-textprimary"
+            style={{ 
+              backgroundColor: loading ? 'var(--color-textSubtle)' : 'var(--color-primary)'
+            }}
           >
             {loading ? 'Recording...' : 'Record Sale'}
           </button>
           
           {message && (
-            <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-md ${
-              isError 
-                ? 'bg-red-50 text-red-800 border border-red-200' 
-                : 'bg-green-50 text-green-800 border border-green-200'
-            }`}>
+            <div 
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-md"
+              style={{
+                backgroundColor: isError ? 'var(--color-dangerBg)' : 'var(--color-successBg)',
+                color: isError ? 'var(--color-dangerLight)' : 'var(--color-successLight)'
+              }}
+            >
               {isError ? '✗' : '✓'}
               <span>{message}</span>
             </div>

@@ -23,22 +23,22 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Commission Reports</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-3xl font-bold text-textprimary">Commission Reports</h1>
+        <p className="mt-2 text-sm text-textmuted">
           Calculate bonuses and view commission reports
         </p>
       </div>
 
       {/* Bonus Calculation Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Calculate Bonuses</h2>
+      <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
+        <h2 className="text-xl font-semibold mb-4 text-textprimary">Calculate Bonuses</h2>
         
         {/* Monthly Bonuses */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Monthly Bonuses</h3>
+          <h3 className="text-sm font-medium mb-2 text-textmuted">Monthly Bonuses</h3>
           <button
             onClick={handleMonthlyBonus}
-            className="inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400"
+            className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-success text-textprimary shadow-custom-sm"
             disabled={calcMessage === 'Calculating...'}
           >
             Calculate Current Month
@@ -47,13 +47,13 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
 
         {/* Quarterly Bonuses */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Quarterly Bonuses</h3>
+          <h3 className="text-sm font-medium mb-2 text-textmuted">Quarterly Bonuses</h3>
           <div className="flex gap-2">
             {[1, 2, 3, 4].map((quarter) => (
               <button
                 key={quarter}
                 onClick={() => handleQuarterlyBonus(quarter)}
-                className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
+                className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-primary text-textprimary shadow-custom-sm"
                 disabled={calcMessage === 'Calculating...'}
               >
                 Q{quarter}
@@ -64,10 +64,10 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
 
         {/* Annual Bonuses */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Annual Bonuses</h3>
+          <h3 className="text-sm font-medium mb-2 text-textmuted">Annual Bonuses</h3>
           <button
             onClick={handleAnnualBonus}
-            className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:bg-gray-400"
+            className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-info text-textprimary shadow-custom-sm"
             disabled={calcMessage === 'Calculating...'}
           >
             Calculate Current Year
@@ -75,15 +75,15 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
         </div>
 
         {calcMessage && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">{calcMessage}</p>
+          <div className="mt-4 p-3 rounded-md bg-infobg">
+            <p className="text-sm text-infolight">{calcMessage}</p>
           </div>
         )}
       </div>
 
       {/* Reuse existing BonusList component */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Bonus History</h2>
+      <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
+        <h2 className="text-xl font-semibold mb-4 text-textprimary">Bonus History</h2>
         <BonusList bonuses={bonuses} />
       </div>
 

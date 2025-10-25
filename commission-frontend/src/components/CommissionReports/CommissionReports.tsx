@@ -105,16 +105,17 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
   };
 
   if (loading) {
-    return <div className="p-4 bg-white rounded-lg shadow-md">Loading commission reports...</div>;
+    return <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-bgCard)', boxShadow: 'var(--shadow-xl)', color: 'var(--color-textPrimary)' }}>Loading commission reports...</div>;
   }
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
+    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-bgCard)', boxShadow: 'var(--shadow-xl)' }}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-700">Commission Reports</h2>
+        <h2 className="text-xl font-semibold" style={{ color: 'var(--color-textPrimary)' }}>Commission Reports</h2>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2"
+          style={{ backgroundColor: 'var(--color-success)', color: 'var(--color-textPrimary)' }}
           disabled={filteredCommissions.length === 0}
         >
           📥 Export CSV
@@ -123,21 +124,21 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <dt className="text-sm font-medium text-blue-600">Total Commissions</dt>
-          <dd className="mt-1 text-2xl font-semibold text-blue-900">
+        <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-primaryBg)' }}>
+          <dt className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>Total Commissions</dt>
+          <dd className="mt-1 text-2xl font-semibold" style={{ color: 'var(--color-primaryLight)' }}>
             ${totalCommissions.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </dd>
         </div>
-        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-          <dt className="text-sm font-medium text-purple-600">Total Bonuses</dt>
-          <dd className="mt-1 text-2xl font-semibold text-purple-900">
+        <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-infoBg)' }}>
+          <dt className="text-sm font-medium" style={{ color: 'var(--color-info)' }}>Total Bonuses</dt>
+          <dd className="mt-1 text-2xl font-semibold" style={{ color: 'var(--color-infoLight)' }}>
             ${totalBonuses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </dd>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <dt className="text-sm font-medium text-green-600">Grand Total</dt>
-          <dd className="mt-1 text-2xl font-semibold text-green-900">
+        <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-successBg)' }}>
+          <dt className="text-sm font-medium" style={{ color: 'var(--color-success)' }}>Grand Total</dt>
+          <dd className="mt-1 text-2xl font-semibold" style={{ color: 'var(--color-successLight)' }}>
             ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </dd>
         </div>
@@ -146,14 +147,18 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
       {/* Filters */}
       <div className="flex gap-4 mb-4">
         <div className="flex-1">
-          <label htmlFor="filterAgent" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filterAgent" className="block text-sm font-medium mb-1" style={{ color: 'var(--color-textPrimary)' }}>
             Filter by Agent
           </label>
           <select
             id="filterAgent"
             value={filterAgent}
             onChange={(e) => setFilterAgent(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="block w-full rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm"
+            style={{ 
+              backgroundColor: 'var(--color-bgInput)', 
+              color: 'var(--color-textPrimary)'
+            }}
           >
             <option value="">All Agents</option>
             {agents.map(agent => (
@@ -162,14 +167,18 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
           </select>
         </div>
         <div className="flex-1">
-          <label htmlFor="filterType" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filterType" className="block text-sm font-medium mb-1" style={{ color: 'var(--color-textPrimary)' }}>
             Filter by Type
           </label>
           <select
             id="filterType"
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="block w-full rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm"
+            style={{ 
+              backgroundColor: 'var(--color-bgInput)', 
+              color: 'var(--color-textPrimary)'
+            }}
           >
             <option value="all">All Types</option>
             <option value="FYC">FYC Only</option>
@@ -180,45 +189,47 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
 
       {/* Commission Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+          <thead style={{ backgroundColor: 'var(--color-bgInput)' }}>
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Value</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Date</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Agent</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Type</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Policy</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Policy Value</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-textMuted)' }}>Commission</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {filteredCommissions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-4 text-center" style={{ color: 'var(--color-textMuted)' }}>
                   No commissions found matching the filters.
                 </td>
               </tr>
             ) : (
               filteredCommissions.map((comm) => (
-                <tr key={comm.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={comm.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-textPrimary)' }}>
                     {new Date(comm.payout_date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{comm.agent_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-textPrimary)' }}>{comm.agent_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      comm.commission_type === 'FYC' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-purple-100 text-purple-800'
-                    }`}>
+                    <span 
+                      className="px-2 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: comm.commission_type === 'FYC' ? 'var(--color-primaryBg)' : 'var(--color-infoBg)',
+                        color: comm.commission_type === 'FYC' ? 'var(--color-primary)' : 'var(--color-info)'
+                      }}
+                    >
                       {comm.commission_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{comm.policy_number}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-textPrimary)' }}>{comm.policy_number}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-textPrimary)' }}>
                     ${comm.policy_value.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: 'var(--color-success)' }}>
                     ${comm.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </td>
                 </tr>
@@ -229,7 +240,7 @@ const CommissionReports: React.FC<CommissionReportsProps> = ({ sales, bonuses })
       </div>
 
       {/* Results Count */}
-      <div className="mt-4 text-sm text-gray-500">
+      <div className="mt-4 text-sm" style={{ color: 'var(--color-textMuted)' }}>
         Showing {filteredCommissions.length} of {commissions.length} commission records
       </div>
     </div>
