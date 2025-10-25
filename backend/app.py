@@ -6,17 +6,14 @@ from datetime import datetime, timezone
 app = Flask(__name__)
 CORS(app)
 
-# --- Database Configuration ---
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///commission.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-
-# --- 1. Agent Model ---
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    level = db.Column(db.Integer, nullable=False)  # 1: Agent, 2: TL, 3: Mgr, 4: Dir
+    level = db.Column(db.Integer, nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=True)
 
     children = db.relationship(
@@ -37,8 +34,6 @@ class Agent(db.Model):
             ]
         return data
 
-
-# --- 2. Sale Model ---
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     policy_number = db.Column(db.String(50), unique=True, nullable=False)
@@ -47,26 +42,21 @@ class Sale(db.Model):
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
     is_cancelled = db.Column(db.Boolean, default=False)
 
-
-# --- 3. Commission Model ---
 class Commission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
-    commission_type = db.Column(db.String(50))  # e.g., 'FYC', 'Override'
+    commission_type = db.Column(db.String(50))
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
     payout_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-# --- 4. Bonus Model ---
 class Bonus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
-    bonus_type = db.Column(db.String(50))  # 'Monthly', 'Quarterly', 'Annual'
-    period = db.Column(db.String(50))  # e.g., '2024-01', '2024-Q1', '2024'
+    bonus_type = db.Column(db.String(50))
+    period = db.Column(db.String(50))
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
 
-
-# --- 5. Clawback Model ---
 class Clawback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
@@ -75,8 +65,6 @@ class Clawback(db.Model):
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
     processed_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-
-# --- 6. Hierarchy Snapshot Model ---
 class HierarchySnapshot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
@@ -84,8 +72,6 @@ class HierarchySnapshot(db.Model):
     upline_level = db.Column(db.Integer)
     upline_agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"))
 
-
-# --- 7. Performance Tier Model ---
 class PerformanceTier(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     agent_level = db.Column(db.Integer, nullable=False)
@@ -97,7 +83,6 @@ class PerformanceTier(db.Model):
 
 def seed_performance_tiers():
     """Adds the default performance tier data to the database."""
-    # This function now expects an active app context from the caller
     stmt = select(func.count(PerformanceTier.id))
     count = db.session.scalar(stmt)
 
@@ -107,22 +92,18 @@ def seed_performance_tiers():
 
     print("Seeding performance tiers...")
     tiers_data = [
-        # Agent Level 1
         {'agent_level': 1, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 25000, 'bonus_rate': 0.00},
         {'agent_level': 1, 'tier_name': 'SILVER', 'min_volume': 25000, 'max_volume': 50000, 'bonus_rate': 0.02},
         {'agent_level': 1, 'tier_name': 'GOLD', 'min_volume': 50000, 'max_volume': 100000, 'bonus_rate': 0.03},
         {'agent_level': 1, 'tier_name': 'PLATINUM', 'min_volume': 100000, 'max_volume': float('inf'), 'bonus_rate': 0.05},
-        # Agent Level 2 (Team Leads)
         {'agent_level': 2, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 100000, 'bonus_rate': 0.00},
         {'agent_level': 2, 'tier_name': 'SILVER', 'min_volume': 100000, 'max_volume': 250000, 'bonus_rate': 0.03},
         {'agent_level': 2, 'tier_name': 'GOLD', 'min_volume': 250000, 'max_volume': 500000, 'bonus_rate': 0.05},
         {'agent_level': 2, 'tier_name': 'PLATINUM', 'min_volume': 500000, 'max_volume': float('inf'), 'bonus_rate': 0.07},
-        # Agent Level 3 (Managers)
         {'agent_level': 3, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 500000, 'bonus_rate': 0.00},
         {'agent_level': 3, 'tier_name': 'SILVER', 'min_volume': 500000, 'max_volume': 1000000, 'bonus_rate': 0.04},
         {'agent_level': 3, 'tier_name': 'GOLD', 'min_volume': 1000000, 'max_volume': 2000000, 'bonus_rate': 0.06},
         {'agent_level': 3, 'tier_name': 'PLATINUM', 'min_volume': 2000000, 'max_volume': float('inf'), 'bonus_rate': 0.08},
-        # Agent Level 4 (Directors)
         {'agent_level': 4, 'tier_name': 'BRONZE', 'min_volume': 0, 'max_volume': 1000000, 'bonus_rate': 0.00},
         {'agent_level': 4, 'tier_name': 'SILVER', 'min_volume': 1000000, 'max_volume': 3000000, 'bonus_rate': 0.05},
         {'agent_level': 4, 'tier_name': 'GOLD', 'min_volume': 3000000, 'max_volume': 5000000, 'bonus_rate': 0.07},
@@ -133,33 +114,26 @@ def seed_performance_tiers():
         tier = PerformanceTier(**tier_info)
         db.session.add(tier)
 
-    # Use flush, commit will be handled by the caller (CLI command or test fixture)
     db.session.flush()
     print("Performance tiers flushed.")
 
-
-# --- CLI Commands ---
 @app.cli.command("seed-db")
 def seed_db_command():
     """Seeds the database with initial data (like performance tiers)."""
     seed_performance_tiers()
-    db.session.commit() # Commit the changes made by seeding
+    db.session.commit()
     print("Database seeded successfully!")
 
-# --- Function to create tables ---
 def create_tables():
     with app.app_context():
         db.create_all()
         print("Database tables created!")
 
-
-# --- Agent CRUD API Endpoints ---
 @app.route("/api/agents", methods=["POST"])
 def add_agent():
     try:
         data = request.get_json()
         
-        # Validation
         if not data:
             return jsonify({"error": "Request body is required"}), 400
         
@@ -172,14 +146,12 @@ def add_agent():
         if data.get("level") not in [1, 2, 3, 4]:
             return jsonify({"error": "Agent level must be 1 (Agent), 2 (Team Lead), 3 (Manager), or 4 (Director)"}), 400
         
-        # Validate parent_id if provided
         parent_id = data.get("parent_id")
         if parent_id is not None:
             parent_agent = db.session.get(Agent, parent_id)
             if not parent_agent:
                 return jsonify({"error": f"Parent agent with ID {parent_id} not found"}), 404
             
-            # Validate hierarchy rules: parent must be higher level (higher number)
             if parent_agent.level <= data.get("level"):
                 return jsonify({"error": "Parent agent must be at a higher level than the child agent"}), 400
         
@@ -203,21 +175,16 @@ def add_agent():
 @app.route("/api/agents", methods=["GET"])
 def get_agents():
     try:
-        # Check if a 'level' query parameter is provided
         level_filter = request.args.get('level', type=int)
 
         if level_filter:
-            # Validate level filter
             if level_filter not in [1, 2, 3, 4]:
                 return jsonify({"error": "Level filter must be 1, 2, 3, or 4"}), 400
             
-            # Get all agents matching that level
             stmt = select(Agent).filter_by(level=level_filter)
             agents = db.session.scalars(stmt).all()
-            # Return a flat list of these agents
             return jsonify([agent.to_dict() for agent in agents])
 
-        # If no level is specified, return the full hierarchy (original behavior)
         stmt = select(Agent).filter_by(parent_id=None)
         top_level_agents = db.session.scalars(stmt).all()
         hierarchy = [agent.to_dict(include_children=True) for agent in top_level_agents]
@@ -239,46 +206,37 @@ def update_agent(agent_id):
         if not data:
             return jsonify({"error": "Request body is required"}), 400
         
-        # Update name if provided
         if "name" in data:
             if not isinstance(data["name"], str) or not data["name"].strip():
                 return jsonify({"error": "Agent name must be a non-empty string"}), 400
             agent.name = data["name"].strip()
         
-        # Update level if provided
         if "level" in data:
             if not isinstance(data["level"], int) or data["level"] not in [1, 2, 3, 4]:
                 return jsonify({"error": "Agent level must be 1, 2, 3, or 4"}), 400
             
-            # Check if level change would violate hierarchy rules
-            # Parent must be at higher level than child
             if agent.parent_id:
                 parent = db.session.get(Agent, agent.parent_id)
                 if parent and parent.level <= data["level"]:
                     return jsonify({"error": "Cannot update level: parent must be at a higher level"}), 400
             
-            # Check if any children would violate hierarchy rules
             for child in agent.children:
                 if child.level >= data["level"]:
                     return jsonify({"error": f"Cannot update level: child agent {child.name} (Level {child.level}) must be at a lower level"}), 400
             
             agent.level = data["level"]
         
-        # Update parent_id if provided
         if "parent_id" in data:
             parent_id = data["parent_id"]
             
-            # Allow setting parent_id to None (making it a top-level agent)
             if parent_id is not None:
                 if not isinstance(parent_id, int):
                     return jsonify({"error": "Parent ID must be an integer or null"}), 400
                 
-                # Check if parent exists
                 parent_agent = db.session.get(Agent, parent_id)
                 if not parent_agent:
                     return jsonify({"error": f"Parent agent with ID {parent_id} not found"}), 404
                 
-                # Check for circular reference (cannot set parent to self or descendants)
                 if parent_id == agent_id:
                     return jsonify({"error": "Agent cannot be its own parent"}), 400
                 
@@ -286,7 +244,6 @@ def update_agent(agent_id):
                 if parent_id in descendant_ids:
                     return jsonify({"error": "Cannot create circular reference: parent cannot be a descendant"}), 400
                 
-                # Validate hierarchy rules: parent must be at higher level
                 if parent_agent.level <= agent.level:
                     return jsonify({"error": "Parent agent must be at a higher level than the child agent"}), 400
             
@@ -309,17 +266,14 @@ def delete_agent(agent_id):
         if not agent:
             return jsonify({"error": "Agent not found"}), 404
         
-        # Check if agent has any sales
         sales_count = db.session.scalar(select(func.count(Sale.id)).where(Sale.agent_id == agent_id))
         if sales_count > 0:
             return jsonify({"error": f"Cannot delete agent: agent has {sales_count} associated sales"}), 400
         
-        # Check if agent has any children
         children_count = db.session.scalar(select(func.count(Agent.id)).where(Agent.parent_id == agent_id))
         if children_count > 0:
             return jsonify({"error": f"Cannot delete agent: agent has {children_count} child agents. Remove or reassign children first."}), 400
         
-        # Safe to delete
         db.session.delete(agent)
         db.session.commit()
         return jsonify({"message": "Agent deleted successfully"}), 200
@@ -329,15 +283,12 @@ def delete_agent(agent_id):
         app.logger.error(f"Error deleting agent: {e}", exc_info=True)
         return jsonify({"error": "An internal error occurred while deleting the agent"}), 500
 
-# --- Commission Calculation Logic ---
-
-# Define the commission rates
 COMMISSION_RATES = {
-    "FYC": 0.50,  # 50%
+    "FYC": 0.50,
     "Override": {
-        2: 0.02,  # Team Lead (Level 2) gets 2%
-        3: 0.015,  # Manager (Level 3) gets 1.5%
-        4: 0.01,  # Director (Level 4) gets 1%
+        2: 0.02,
+        3: 0.015,
+        4: 0.01,
     },
 }
 
@@ -362,20 +313,15 @@ def get_upline(agent_id, db_session):
 
 def get_downline_agent_ids(agent_id, db_session):
     """Recursively finds all agent IDs in the downline, including the starting agent."""
-    agent_ids = {agent_id} # Use a set to avoid duplicates
+    agent_ids = {agent_id}
     
-    # Find direct children
     children_stmt = select(Agent.id).where(Agent.parent_id == agent_id)
     children_ids = db_session.scalars(children_stmt).all()
     
     for child_id in children_ids:
-        # Recursively get downline for each child and add to the set
         agent_ids.update(get_downline_agent_ids(child_id, db_session))
         
     return list(agent_ids)
-
-# --- Sales API Endpoint ---
-
 
 @app.route("/api/sales", methods=["POST"])
 def create_sale():
