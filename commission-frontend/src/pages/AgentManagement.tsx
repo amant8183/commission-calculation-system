@@ -7,11 +7,16 @@ interface AgentManagementProps {
   onAgentAdded: () => void;
 }
 
-const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdded }) => {
+const AgentManagement: React.FC<AgentManagementProps> = ({
+  hierarchy,
+  onAgentAdded,
+}) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-textprimary">Agent Management</h1>
+        <h1 className="text-3xl font-bold text-textprimary">
+          Agent Management
+        </h1>
         <p className="mt-2 text-sm text-textmuted">
           Manage your sales team hierarchy and agent information
         </p>
@@ -20,7 +25,9 @@ const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdd
       <AgentForm onAgentAdded={onAgentAdded} />
 
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
-        <h2 className="text-xl font-semibold mb-4 text-textprimary">Agent Hierarchy</h2>
+        <h2 className="text-xl font-semibold mb-4 text-textprimary">
+          Agent Hierarchy
+        </h2>
         {hierarchy.length > 0 ? (
           <div className="space-y-2">
             {hierarchy.map((agent) => (

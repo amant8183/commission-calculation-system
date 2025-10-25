@@ -79,13 +79,17 @@ describe('App Component', () => {
     // Wait for the error to be handled and loading to complete
     await waitFor(() => {
       // Check that the loading is gone and no data is present
-      expect(screen.queryByText(/Loading hierarchy.../i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Loading hierarchy.../i)
+      ).not.toBeInTheDocument();
     });
     expect(screen.queryByText(/Mike \(Director\)/i)).not.toBeInTheDocument();
   });
 
   it('renders all main sections of the app', async () => {
-    const mockAgentsData = [{ id: 1, name: 'Test Agent', level: 1, parent_id: null, children: [] }];
+    const mockAgentsData = [
+      { id: 1, name: 'Test Agent', level: 1, parent_id: null, children: [] },
+    ];
     const mockSalesData: any[] = [];
     const mockBonusesData: any[] = [];
     const mockSummaryData = {
@@ -93,15 +97,19 @@ describe('App Component', () => {
       total_commissions_paid: 0,
       total_bonuses_paid: 0,
       total_clawbacks_value: 0,
-      agent_count: 1
+      agent_count: 1,
     };
 
     mockedAxios.get.mockImplementation((url: string) => {
       if (url.includes('/agents?level=1')) return Promise.resolve({ data: [] });
-      if (url.includes('/agents')) return Promise.resolve({ data: mockAgentsData });
-      if (url.includes('/sales')) return Promise.resolve({ data: mockSalesData });
-      if (url.includes('/bonuses')) return Promise.resolve({ data: mockBonusesData });
-      if (url.includes('/dashboard/summary')) return Promise.resolve({ data: mockSummaryData });
+      if (url.includes('/agents'))
+        return Promise.resolve({ data: mockAgentsData });
+      if (url.includes('/sales'))
+        return Promise.resolve({ data: mockSalesData });
+      if (url.includes('/bonuses'))
+        return Promise.resolve({ data: mockBonusesData });
+      if (url.includes('/dashboard/summary'))
+        return Promise.resolve({ data: mockSummaryData });
       return Promise.reject(new Error('Unknown endpoint'));
     });
 
@@ -109,14 +117,22 @@ describe('App Component', () => {
 
     await waitFor(() => {
       // Wait for app to render by checking for main heading
-      expect(screen.getByRole('heading', { name: /Commission Calculation System/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /Commission Calculation System/i })
+      ).toBeInTheDocument();
     });
 
     // Check for main sections that are always rendered
-    expect(screen.getByRole('heading', { name: /Record a New Sale/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Calculate Bonuses/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Hierarchy View/i })).toBeInTheDocument();
-    
+    expect(
+      screen.getByRole('heading', { name: /Record a New Sale/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Calculate Bonuses/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Hierarchy View/i })
+    ).toBeInTheDocument();
+
     // Check for key UI elements
     expect(screen.getByText(/Calculate Current Month/i)).toBeInTheDocument();
     expect(screen.getByText(/Calculate Current Year/i)).toBeInTheDocument();
@@ -125,24 +141,43 @@ describe('App Component', () => {
   it('displays sales and bonus data when available', async () => {
     const mockAgentsData: any[] = [];
     const mockSalesData = [
-      { id: 1, policy_number: 'POL-001', policy_value: 100000, sale_date: '2025-10-21T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false }
+      {
+        id: 1,
+        policy_number: 'POL-001',
+        policy_value: 100000,
+        sale_date: '2025-10-21T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
     ];
     const mockBonusesData = [
-      { id: 1, period: '2025-10', bonus_type: 'Monthly', agent_id: 1, agent_name: 'Agent', amount: 5000 }
+      {
+        id: 1,
+        period: '2025-10',
+        bonus_type: 'Monthly',
+        agent_id: 1,
+        agent_name: 'Agent',
+        amount: 5000,
+      },
     ];
     const mockSummaryData = {
       total_sales_value: 100000,
       total_commissions_paid: 10000,
       total_bonuses_paid: 5000,
       total_clawbacks_value: 0,
-      agent_count: 1
+      agent_count: 1,
     };
 
     mockedAxios.get.mockImplementation((url: string) => {
-      if (url.includes('/agents')) return Promise.resolve({ data: mockAgentsData });
-      if (url.includes('/sales')) return Promise.resolve({ data: mockSalesData });
-      if (url.includes('/bonuses')) return Promise.resolve({ data: mockBonusesData });
-      if (url.includes('/dashboard/summary')) return Promise.resolve({ data: mockSummaryData });
+      if (url.includes('/agents'))
+        return Promise.resolve({ data: mockAgentsData });
+      if (url.includes('/sales'))
+        return Promise.resolve({ data: mockSalesData });
+      if (url.includes('/bonuses'))
+        return Promise.resolve({ data: mockBonusesData });
+      if (url.includes('/dashboard/summary'))
+        return Promise.resolve({ data: mockSummaryData });
       return Promise.reject(new Error('Unknown endpoint'));
     });
 

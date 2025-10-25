@@ -11,7 +11,9 @@ describe('DashboardSummary Component', () => {
 
   it('renders error state when summary is null and not loading', () => {
     render(<DashboardSummary summary={null} loading={false} />);
-    expect(screen.getByText(/Could not load summary data./i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Could not load summary data./i)
+    ).toBeInTheDocument();
   });
 
   it('renders summary data correctly', () => {
@@ -39,10 +41,10 @@ describe('DashboardSummary Component', () => {
 
     expect(screen.getByText(/Total Clawbacks/i)).toBeInTheDocument();
     // Check that it displays the absolute value with formatting
-    expect(screen.getByText('$1,234.56')).toBeInTheDocument(); 
+    expect(screen.getByText('$1,234.56')).toBeInTheDocument();
   });
 
-   it('renders zero clawbacks correctly', () => {
+  it('renders zero clawbacks correctly', () => {
     const mockSummary: SummaryData = {
       agent_count: 10,
       total_sales_value: 100000,
@@ -54,7 +56,7 @@ describe('DashboardSummary Component', () => {
 
     expect(screen.getByText(/Total Clawbacks/i)).toBeInTheDocument();
     // Check that it displays zero correctly formatted
-    expect(screen.getByText('$0.00')).toBeInTheDocument(); 
+    expect(screen.getByText('$0.00')).toBeInTheDocument();
   });
 
   it('renders all stat cards correctly', () => {
@@ -109,7 +111,9 @@ describe('DashboardSummary Component', () => {
       total_bonuses_paid: 1000,
       total_clawbacks_value: -100,
     };
-    const { container } = render(<DashboardSummary summary={mockSummary} loading={false} />);
+    const { container } = render(
+      <DashboardSummary summary={mockSummary} loading={false} />
+    );
 
     // Check that the component renders without errors
     expect(container.querySelector('.grid')).toBeInTheDocument();

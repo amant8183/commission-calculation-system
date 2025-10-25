@@ -6,7 +6,9 @@ import { Sale } from '../SalesList';
 describe('SalesChart Component', () => {
   it('renders "no data" message when sales array is empty', () => {
     render(<SalesChart sales={[]} />);
-    expect(screen.getByText(/No sales data available for chart/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No sales data available for chart/i)
+    ).toBeInTheDocument();
   });
 
   it('renders chart when sales data is provided', () => {
@@ -23,7 +25,7 @@ describe('SalesChart Component', () => {
     ];
 
     render(<SalesChart sales={mockSales} />);
-    
+
     // Chart.js renders a canvas element
     const canvas = document.querySelector('canvas');
     expect(canvas).toBeInTheDocument();
@@ -52,7 +54,7 @@ describe('SalesChart Component', () => {
     ];
 
     render(<SalesChart sales={mockSales} />);
-    
+
     // Should still render the chart (cancelled sales are filtered internally)
     const canvas = document.querySelector('canvas');
     expect(canvas).toBeInTheDocument();
@@ -100,7 +102,7 @@ describe('SalesChart Component', () => {
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
@@ -116,18 +118,82 @@ describe('SalesChart Component', () => {
   it('displays only the data for the last six distinct months', async () => {
     // Create sales spanning 8 months (should only show last 6)
     const mockSales: Sale[] = [
-      { id: 1, policy_number: 'POL-01', policy_value: 10000, sale_date: '2024-03-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 2, policy_number: 'POL-02', policy_value: 10000, sale_date: '2024-04-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 3, policy_number: 'POL-03', policy_value: 10000, sale_date: '2024-05-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 4, policy_number: 'POL-04', policy_value: 10000, sale_date: '2024-06-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 5, policy_number: 'POL-05', policy_value: 10000, sale_date: '2024-07-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 6, policy_number: 'POL-06', policy_value: 10000, sale_date: '2024-08-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 7, policy_number: 'POL-07', policy_value: 10000, sale_date: '2024-09-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
-      { id: 8, policy_number: 'POL-08', policy_value: 10000, sale_date: '2024-10-15T10:00:00Z', agent_id: 1, agent_name: 'Agent', is_cancelled: false },
+      {
+        id: 1,
+        policy_number: 'POL-01',
+        policy_value: 10000,
+        sale_date: '2024-03-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 2,
+        policy_number: 'POL-02',
+        policy_value: 10000,
+        sale_date: '2024-04-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 3,
+        policy_number: 'POL-03',
+        policy_value: 10000,
+        sale_date: '2024-05-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 4,
+        policy_number: 'POL-04',
+        policy_value: 10000,
+        sale_date: '2024-06-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 5,
+        policy_number: 'POL-05',
+        policy_value: 10000,
+        sale_date: '2024-07-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 6,
+        policy_number: 'POL-06',
+        policy_value: 10000,
+        sale_date: '2024-08-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 7,
+        policy_number: 'POL-07',
+        policy_value: 10000,
+        sale_date: '2024-09-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
+      {
+        id: 8,
+        policy_number: 'POL-08',
+        policy_value: 10000,
+        sale_date: '2024-10-15T10:00:00Z',
+        agent_id: 1,
+        agent_name: 'Agent',
+        is_cancelled: false,
+      },
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
@@ -161,7 +227,7 @@ describe('SalesChart Component', () => {
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
@@ -205,7 +271,7 @@ describe('SalesChart Component', () => {
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
@@ -248,7 +314,7 @@ describe('SalesChart Component', () => {
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
@@ -282,7 +348,7 @@ describe('SalesChart Component', () => {
     ];
 
     const { container } = render(<SalesChart sales={mockSales} />);
-    
+
     await waitFor(() => {
       // When all sales are cancelled, the chart still renders
       // but with empty data (no bars visible)

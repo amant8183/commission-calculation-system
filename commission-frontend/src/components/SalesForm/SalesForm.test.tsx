@@ -36,22 +36,33 @@ describe('SalesForm Component', () => {
     expect(screen.getByLabelText(/Policy Number/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Policy Value/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Selling Agent/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Record Sale/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Record Sale/i })
+    ).toBeInTheDocument();
 
     // Check if axios.get was called for agents
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/api/agents?level=1'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/api/agents?level=1')
+    );
 
     // Wait for agents to load and check dropdown options
     // Use findByRole for async elements
     await waitFor(() => {
-      expect(screen.getByRole('option', { name: /Sarah \(Agent\)/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: /Sarah \(Agent\)/i })
+      ).toBeInTheDocument();
     });
-    expect(screen.getByRole('option', { name: /John \(Agent\)/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: /John \(Agent\)/i })
+    ).toBeInTheDocument();
   });
 
   it('submits the form data correctly and calls onSaleAdded', async () => {
     // Mock the POST response
-    mockedAxios.post.mockResolvedValue({ status: 201, data: { sale_id: 101, message: 'Success' } });
+    mockedAxios.post.mockResolvedValue({
+      status: 201,
+      data: { sale_id: 101, message: 'Success' },
+    });
 
     render(<SalesForm onSaleAdded={mockOnSaleAdded} />);
     const user = userEvent.setup(); // For simulating user typing
@@ -62,7 +73,10 @@ describe('SalesForm Component', () => {
     // Fill the form
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-TEST-101');
     await user.type(screen.getByLabelText(/Policy Value/i), '75000');
-    await user.selectOptions(screen.getByLabelText(/Selling Agent/i), screen.getByRole('option', { name: /John \(Agent\)/i }));
+    await user.selectOptions(
+      screen.getByLabelText(/Selling Agent/i),
+      screen.getByRole('option', { name: /John \(Agent\)/i })
+    );
 
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
@@ -80,7 +94,9 @@ describe('SalesForm Component', () => {
     });
 
     // Check if success message is shown (with new format including checkmark)
-    expect(await screen.findByText(/Sale #101 recorded successfully!/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Sale #101 recorded successfully!/i)
+    ).toBeInTheDocument();
 
     // Check if onSaleAdded prop was called
     expect(mockOnSaleAdded).toHaveBeenCalledTimes(1);
@@ -121,7 +137,9 @@ describe('SalesForm Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
     // Check for validation error
-    expect(await screen.findByText(/Policy number is required/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy number is required/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -133,11 +151,13 @@ describe('SalesForm Component', () => {
     // Type short policy number
     await user.type(screen.getByLabelText(/Policy Number/i), 'AB');
     await user.type(screen.getByLabelText(/Policy Value/i), '50000');
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
     // Check for validation error
-    expect(await screen.findByText(/Policy number must be at least 3 characters/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy number must be at least 3 characters/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -148,10 +168,12 @@ describe('SalesForm Component', () => {
 
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-123');
     // Don't fill policy value
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
-    expect(await screen.findByText(/Policy value is required/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy value is required/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -162,10 +184,12 @@ describe('SalesForm Component', () => {
 
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-123');
     await user.type(screen.getByLabelText(/Policy Value/i), '0');
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
-    expect(await screen.findByText(/Policy value must be greater than zero/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy value must be greater than zero/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -176,10 +200,12 @@ describe('SalesForm Component', () => {
 
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-123');
     await user.type(screen.getByLabelText(/Policy Value/i), '-5000');
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
-    expect(await screen.findByText(/Policy value must be greater than zero/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy value must be greater than zero/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -190,10 +216,12 @@ describe('SalesForm Component', () => {
 
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-123');
     await user.type(screen.getByLabelText(/Policy Value/i), '11000000'); // > $10M
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
-    expect(await screen.findByText(/Policy value cannot exceed/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy value cannot exceed/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
@@ -204,14 +232,18 @@ describe('SalesForm Component', () => {
 
     // Submit with empty policy number to trigger error
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
-    expect(await screen.findByText(/Policy number is required/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy number is required/i)
+    ).toBeInTheDocument();
 
     // Now type a valid policy number
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-VALID');
 
     // Error should be cleared
     await waitFor(() => {
-      expect(screen.queryByText(/Policy number is required/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Policy number is required/i)
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -220,9 +252,9 @@ describe('SalesForm Component', () => {
     mockedAxios.post.mockRejectedValue({
       response: {
         data: {
-          error: 'Policy number POL-DUP already exists'
-        }
-      }
+          error: 'Policy number POL-DUP already exists',
+        },
+      },
     });
 
     render(<SalesForm onSaleAdded={mockOnSaleAdded} />);
@@ -234,14 +266,22 @@ describe('SalesForm Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Record Sale/i }));
 
     // Check if API error message is displayed
-    expect(await screen.findByText(/Policy number POL-DUP already exists/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Policy number POL-DUP already exists/i)
+    ).toBeInTheDocument();
     expect(mockOnSaleAdded).not.toHaveBeenCalled();
   });
 
   it('shows loading state and disables button during submission', async () => {
     // Mock a delayed response
-    mockedAxios.post.mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({ status: 201, data: { sale_id: 102 } }), 100))
+    mockedAxios.post.mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () => resolve({ status: 201, data: { sale_id: 102 } }),
+            100
+          )
+        )
     );
 
     render(<SalesForm onSaleAdded={mockOnSaleAdded} />);
@@ -250,13 +290,15 @@ describe('SalesForm Component', () => {
 
     await user.type(screen.getByLabelText(/Policy Number/i), 'POL-LOADING');
     await user.type(screen.getByLabelText(/Policy Value/i), '75000');
-    
+
     const submitButton = screen.getByRole('button', { name: /Record Sale/i });
     fireEvent.click(submitButton);
 
     // Check loading state
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Recording.../i })).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: /Recording.../i })
+      ).toBeDisabled();
     });
   });
 });

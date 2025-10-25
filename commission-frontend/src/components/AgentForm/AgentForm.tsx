@@ -12,7 +12,7 @@ const LEVEL_NAMES = {
   1: 'Agent',
   2: 'Team Lead',
   3: 'Manager',
-  4: 'Director'
+  4: 'Director',
 };
 
 const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
@@ -23,7 +23,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const fetchParentAgents = async () => {
@@ -35,9 +35,11 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
 
       try {
         const higherLevel = level + 1;
-        const response = await axios.get(`${API_URL}/agents?level=${higherLevel}`);
+        const response = await axios.get(
+          `${API_URL}/agents?level=${higherLevel}`
+        );
         setAvailableParents(response.data);
-        
+
         if (response.data.length > 0) {
           setParentId(response.data[0].id.toString());
         } else {
@@ -53,7 +55,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   }, [level]);
 
   const validateForm = (): boolean => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!name.trim()) {
       newErrors.name = 'Agent name is required';
@@ -99,7 +101,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
         setMessage(`✓ Agent "${name}" added successfully!`);
         setIsError(false);
         setErrors({});
-        
+
         setName('');
         setLevel(1);
         setParentId('');
@@ -126,12 +128,27 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   };
 
   return (
-    <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: 'var(--color-bgCard)', boxShadow: 'var(--shadow-xl)' }}>
-      <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-textPrimary)' }}>Add New Agent</h2>
+    <div
+      className="p-4 rounded-lg mb-6"
+      style={{
+        backgroundColor: 'var(--color-bgCard)',
+        boxShadow: 'var(--shadow-xl)',
+      }}
+    >
+      <h2
+        className="text-xl font-semibold mb-4"
+        style={{ color: 'var(--color-textPrimary)' }}
+      >
+        Add New Agent
+      </h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="agentName" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
+            <label
+              htmlFor="agentName"
+              className="block text-sm font-medium"
+              style={{ color: 'var(--color-textMuted)' }}
+            >
               Agent Name *
             </label>
             <input
@@ -141,24 +158,33 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               onChange={(e) => {
                 setName(e.target.value);
                 if (errors.name) {
-                  setErrors({...errors, name: ''});
+                  setErrors({ ...errors, name: '' });
                 }
               }}
               className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm px-3 py-2.5"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
-                color: 'var(--color-textPrimary)'
+                color: 'var(--color-textPrimary)',
               }}
               placeholder="John Doe"
               required
             />
             {errors.name && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.name}</p>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: 'var(--color-danger)' }}
+              >
+                {errors.name}
+              </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="agentLevel" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
+            <label
+              htmlFor="agentLevel"
+              className="block text-sm font-medium"
+              style={{ color: 'var(--color-textMuted)' }}
+            >
               Level *
             </label>
             <select
@@ -168,7 +194,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               className="mt-1 block w-full rounded-md py-2.5 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
-                color: 'var(--color-textPrimary)'
+                color: 'var(--color-textPrimary)',
               }}
               required
             >
@@ -180,7 +206,11 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
           </div>
 
           <div>
-            <label htmlFor="parentAgent" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
+            <label
+              htmlFor="parentAgent"
+              className="block text-sm font-medium"
+              style={{ color: 'var(--color-textMuted)' }}
+            >
               {level === 4 ? 'Parent Agent (N/A)' : 'Parent Agent *'}
             </label>
             <select
@@ -189,14 +219,14 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               onChange={(e) => {
                 setParentId(e.target.value);
                 if (errors.parentId) {
-                  setErrors({...errors, parentId: ''});
+                  setErrors({ ...errors, parentId: '' });
                 }
               }}
               className="mt-1 block w-full rounded-md py-2.5 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
                 color: 'var(--color-textPrimary)',
-                opacity: (level === 4 || availableParents.length === 0) ? 0.5 : 1
+                opacity: level === 4 || availableParents.length === 0 ? 0.5 : 1,
               }}
               disabled={level === 4 || availableParents.length === 0}
               required={level !== 4}
@@ -204,7 +234,10 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               {level === 4 ? (
                 <option value="">No Parent (Top Level)</option>
               ) : availableParents.length === 0 ? (
-                <option value="">No {LEVEL_NAMES[level + 1 as keyof typeof LEVEL_NAMES]}s available</option>
+                <option value="">
+                  No {LEVEL_NAMES[(level + 1) as keyof typeof LEVEL_NAMES]}s
+                  available
+                </option>
               ) : (
                 availableParents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
@@ -214,11 +247,20 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               )}
             </select>
             {errors.parentId && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--color-danger)' }}>{errors.parentId}</p>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: 'var(--color-danger)' }}
+              >
+                {errors.parentId}
+              </p>
             )}
             {level !== 4 && availableParents.length === 0 && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--color-warning)' }}>
-                ⚠️ Create a {LEVEL_NAMES[level + 1 as keyof typeof LEVEL_NAMES]} first
+              <p
+                className="mt-1 text-sm"
+                style={{ color: 'var(--color-warning)' }}
+              >
+                ⚠️ Create a{' '}
+                {LEVEL_NAMES[(level + 1) as keyof typeof LEVEL_NAMES]} first
               </p>
             )}
           </div>
@@ -230,21 +272,28 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
             type="submit"
             disabled={loading || (level !== 4 && availableParents.length === 0)}
             className="inline-flex justify-center rounded-md py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 transition-colors"
-            style={{ 
-              backgroundColor: (loading || (level !== 4 && availableParents.length === 0)) ? 'var(--color-textSubtle)' : 'var(--color-primary)', 
+            style={{
+              backgroundColor:
+                loading || (level !== 4 && availableParents.length === 0)
+                  ? 'var(--color-textSubtle)'
+                  : 'var(--color-primary)',
               color: 'var(--color-textPrimary)',
-              boxShadow: 'var(--shadow-sm)'
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {loading ? 'Adding...' : 'Add Agent'}
           </button>
 
           {message && (
-            <div 
+            <div
               className="flex items-center gap-2 text-sm px-4 py-2 rounded-md"
               style={{
-                backgroundColor: isError ? 'var(--color-dangerBg)' : 'var(--color-successBg)',
-                color: isError ? 'var(--color-dangerLight)' : 'var(--color-successLight)'
+                backgroundColor: isError
+                  ? 'var(--color-dangerBg)'
+                  : 'var(--color-successBg)',
+                color: isError
+                  ? 'var(--color-dangerLight)'
+                  : 'var(--color-successLight)',
               }}
             >
               {isError ? '✗' : '✓'}

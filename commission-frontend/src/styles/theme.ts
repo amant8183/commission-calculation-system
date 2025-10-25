@@ -10,7 +10,7 @@ export const theme = {
     primaryHover: 'var(--color-primaryHover)',
     primaryLight: 'var(--color-primaryLight)',
     primaryDark: 'var(--color-primaryDark)',
-    
+
     // Backgrounds
     bgBase: 'var(--color-bgBase)',
     bgDark: 'var(--color-bgDark)',
@@ -18,45 +18,45 @@ export const theme = {
     bgCardHover: 'var(--color-bgCardHover)',
     bgSidebar: 'var(--color-bgSidebar)',
     bgInput: 'var(--color-bgInput)',
-    
+
     // Borders
     border: 'var(--color-border)',
     borderLight: 'var(--color-borderLight)',
     borderHover: 'var(--color-borderHover)',
-    
+
     // Text
     textPrimary: 'var(--color-textPrimary)',
     textSecondary: 'var(--color-textSecondary)',
     textMuted: 'var(--color-textMuted)',
     textDim: 'var(--color-textDim)',
     textSubtle: 'var(--color-textSubtle)',
-    
+
     // Accents - Success
     success: 'var(--color-success)',
     successHover: 'var(--color-successHover)',
     successLight: 'var(--color-successLight)',
     successBg: 'var(--color-successBg)',
     successBorder: 'var(--color-successBorder)',
-    
+
     // Accents - Danger
     danger: 'var(--color-danger)',
     dangerHover: 'var(--color-dangerHover)',
     dangerLight: 'var(--color-dangerLight)',
     dangerBg: 'var(--color-dangerBg)',
     dangerBorder: 'var(--color-dangerBorder)',
-    
+
     // Accents - Warning
     warning: 'var(--color-warning)',
     warningHover: 'var(--color-warningHover)',
     warningLight: 'var(--color-warningLight)',
     warningBg: 'var(--color-warningBg)',
-    
+
     // Accents - Info
     info: 'var(--color-info)',
     infoHover: 'var(--color-infoHover)',
     infoLight: 'var(--color-infoLight)',
     infoBg: 'var(--color-infoBg)',
-    
+
     // Chart colors
     chartPrimary: 'var(--color-chartPrimary)',
     chartPrimaryBorder: 'var(--color-chartPrimaryBorder)',
@@ -64,14 +64,14 @@ export const theme = {
     chartText: 'var(--color-chartText)',
     chartTextDim: 'var(--color-chartTextDim)',
   },
-  
+
   shadows: {
     sm: 'var(--shadow-sm)',
     md: 'var(--shadow-md)',
     lg: 'var(--shadow-lg)',
     xl: 'var(--shadow-xl)',
     primary: 'var(--shadow-primary)',
-  }
+  },
 };
 
 /**
@@ -83,13 +83,13 @@ export const commonStyles = {
     border: `1px solid ${theme.colors.border}`,
     boxShadow: theme.shadows.xl,
   },
-  
+
   input: {
     backgroundColor: theme.colors.bgInput,
     border: `1px solid ${theme.colors.border}`,
     color: theme.colors.textSecondary,
   },
-  
+
   button: {
     primary: {
       backgroundColor: theme.colors.primary,
@@ -101,7 +101,7 @@ export const commonStyles = {
       border: `1px solid ${theme.colors.border}`,
     },
   },
-  
+
   badge: {
     success: {
       backgroundColor: theme.colors.successBg,

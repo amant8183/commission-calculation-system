@@ -7,11 +7,16 @@ interface ClawbackManagementPageProps {
   handleCancelSale: (saleId: number) => Promise<void>;
 }
 
-const ClawbackManagementPage: React.FC<ClawbackManagementPageProps> = ({ sales, handleCancelSale }) => {
+const ClawbackManagementPage: React.FC<ClawbackManagementPageProps> = ({
+  sales,
+  handleCancelSale,
+}) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-textprimary">Clawback Management</h1>
+        <h1 className="text-3xl font-bold text-textprimary">
+          Clawback Management
+        </h1>
         <p className="mt-2 text-sm text-textmuted">
           Manage policy cancellations and clawback processing
         </p>

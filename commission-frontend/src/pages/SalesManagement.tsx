@@ -8,11 +8,17 @@ interface SalesManagementProps {
   onCancelSale: (saleId: number) => Promise<void>;
 }
 
-const SalesManagement: React.FC<SalesManagementProps> = ({ sales, onSaleAdded, onCancelSale }) => {
+const SalesManagement: React.FC<SalesManagementProps> = ({
+  sales,
+  onSaleAdded,
+  onCancelSale,
+}) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-textprimary">Sales Management</h1>
+        <h1 className="text-3xl font-bold text-textprimary">
+          Sales Management
+        </h1>
         <p className="mt-2 text-sm text-textmuted">
           Record new policy sales and view sales history
         </p>
@@ -21,7 +27,9 @@ const SalesManagement: React.FC<SalesManagementProps> = ({ sales, onSaleAdded, o
       <SalesForm onSaleAdded={onSaleAdded} />
 
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
-        <h2 className="text-xl font-semibold mb-4 text-textprimary">Sales History</h2>
+        <h2 className="text-xl font-semibold mb-4 text-textprimary">
+          Sales History
+        </h2>
         <SalesList sales={sales} onCancelSale={onCancelSale} />
       </div>
     </div>

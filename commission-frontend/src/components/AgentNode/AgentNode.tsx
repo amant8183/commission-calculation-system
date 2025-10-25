@@ -28,7 +28,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState(agent.name);
   const [editLevel, setEditLevel] = useState(agent.level);
-  const [editParentId, setEditParentId] = useState<number | null>(agent.parent_id || null);
+  const [editParentId, setEditParentId] = useState<number | null>(
+    agent.parent_id || null
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +38,7 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
     if (!window.confirm(`Are you sure you want to delete ${agent.name}?`)) {
       return;
     }
-    
+
     setLoading(true);
     setError('');
     try {
@@ -55,12 +57,12 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       await axios.put(`${API_URL}/agents/${agent.id}`, {
         name: editName,
         level: editLevel,
-        parent_id: editParentId
+        parent_id: editParentId,
       });
       setShowEditModal(false);
       if (onUpdate) onUpdate();
@@ -82,16 +84,19 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
 
   return (
     <div>
-      <div 
+      <div
         className={`p-2 my-1 border-l-4 rounded ${color} flex justify-between items-center`}
-        style={{ 
-          backgroundColor: 'var(--color-bgCard)', 
-          borderLeftWidth: '4px'
+        style={{
+          backgroundColor: 'var(--color-bgCard)',
+          borderLeftWidth: '4px',
         }}
       >
         <p className="font-bold" style={{ color: 'var(--color-textPrimary)' }}>
           {agent.name}{' '}
-          <span className="font-normal" style={{ color: 'var(--color-textMuted)' }}>
+          <span
+            className="font-normal"
+            style={{ color: 'var(--color-textMuted)' }}
+          >
             (Level {agent.level})
           </span>
         </p>
@@ -99,9 +104,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
           <button
             onClick={openEditModal}
             className="text-xs px-2 py-1 rounded"
-            style={{ 
-              backgroundColor: 'var(--color-primary)', 
-              color: 'var(--color-textPrimary)'
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'var(--color-textPrimary)',
             }}
             disabled={loading}
           >
@@ -110,9 +115,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
           <button
             onClick={handleDelete}
             className="text-xs px-2 py-1 rounded"
-            style={{ 
-              backgroundColor: 'var(--color-danger)', 
-              color: 'var(--color-textPrimary)'
+            style={{
+              backgroundColor: 'var(--color-danger)',
+              color: 'var(--color-textPrimary)',
             }}
             disabled={loading}
           >
@@ -123,16 +128,24 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
 
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div 
+          <div
             className="p-6 rounded-lg shadow-xl max-w-md w-full"
-            style={{ 
-              backgroundColor: 'var(--color-bgCard)'
+            style={{
+              backgroundColor: 'var(--color-bgCard)',
             }}
           >
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-textPrimary)' }}>Edit Agent</h3>
+            <h3
+              className="text-xl font-semibold mb-4"
+              style={{ color: 'var(--color-textPrimary)' }}
+            >
+              Edit Agent
+            </h3>
             <form onSubmit={handleEdit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-textPrimary)' }}>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'var(--color-textPrimary)' }}
+                >
                   Name
                 </label>
                 <input
@@ -140,24 +153,27 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--color-bgInput)', 
-                    color: 'var(--color-textPrimary)'
+                  style={{
+                    backgroundColor: 'var(--color-bgInput)',
+                    color: 'var(--color-textPrimary)',
                   }}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-textPrimary)' }}>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'var(--color-textPrimary)' }}
+                >
                   Level
                 </label>
                 <select
                   value={editLevel}
                   onChange={(e) => setEditLevel(parseInt(e.target.value))}
                   className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--color-bgInput)', 
-                    color: 'var(--color-textPrimary)'
+                  style={{
+                    backgroundColor: 'var(--color-bgInput)',
+                    color: 'var(--color-textPrimary)',
                   }}
                 >
                   <option value={1}>1 - Agent</option>
@@ -167,7 +183,13 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
                 </select>
               </div>
               {error && (
-                <div className="mb-4 p-2 rounded" style={{ backgroundColor: 'var(--color-dangerBg)', color: 'var(--color-danger)' }}>
+                <div
+                  className="mb-4 p-2 rounded"
+                  style={{
+                    backgroundColor: 'var(--color-dangerBg)',
+                    color: 'var(--color-danger)',
+                  }}
+                >
                   {error}
                 </div>
               )}
@@ -176,9 +198,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
                   type="button"
                   onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 rounded"
-                  style={{ 
-                    backgroundColor: 'var(--color-bgInput)', 
-                    color: 'var(--color-textPrimary)'
+                  style={{
+                    backgroundColor: 'var(--color-bgInput)',
+                    color: 'var(--color-textPrimary)',
                   }}
                   disabled={loading}
                 >
@@ -187,9 +209,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
                 <button
                   type="submit"
                   className="px-4 py-2 rounded"
-                  style={{ 
-                    backgroundColor: 'var(--color-primary)', 
-                    color: 'var(--color-textPrimary)'
+                  style={{
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-textPrimary)',
                   }}
                   disabled={loading}
                 >
@@ -203,7 +225,10 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
 
       {/* THIS IS THE RECURSIVE PART THAT CREATES THE INDENTATION */}
       {agent.children && agent.children.length > 0 && (
-        <div className="pl-6 border-l-2 ml-2" style={{ borderColor: 'var(--color-border)' }}>
+        <div
+          className="pl-6 border-l-2 ml-2"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
           {agent.children.map((child) => (
             <AgentNode key={child.id} agent={child} onUpdate={onUpdate} />
           ))}

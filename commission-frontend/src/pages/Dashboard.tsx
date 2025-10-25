@@ -1,10 +1,7 @@
 import React from 'react';
 import SalesChart from '../components/SalesChart';
 import { Sale } from '../components/SalesList';
-import {
-  ArrowUpIcon,
-  ArrowDownIcon,
-} from '@heroicons/react/24/solid';
+import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
 
 interface DashboardProps {
   summaryData: any;
@@ -12,7 +9,11 @@ interface DashboardProps {
   sales: Sale[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) => {
+const Dashboard: React.FC<DashboardProps> = ({
+  summaryData,
+  loading,
+  sales,
+}) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -22,9 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
     }).format(value);
   };
 
-  const recentSales = sales
-    .filter((sale) => !sale.is_cancelled)
-    .slice(0, 5);
+  const recentSales = sales.filter((sale) => !sale.is_cancelled).slice(0, 5);
 
   const stats = [
     {
@@ -32,7 +31,7 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
       value: formatCurrency(summaryData?.total_sales_value || 0),
       change: '+12.5%',
       isPositive: true,
-      subtext: `${sales.filter(s => !s.is_cancelled).length} policies`,
+      subtext: `${sales.filter((s) => !s.is_cancelled).length} policies`,
     },
     {
       label: 'Commissions Paid',
@@ -70,7 +69,9 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
       <div className="backdrop-blur-md rounded-2xl p-6 bg-bgcard shadow-custom-xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-textprimary">Dashboard</h1>
+            <h1 className="text-3xl font-semibold text-textprimary">
+              Dashboard
+            </h1>
             <p className="mt-1 text-sm text-textmuted">
               Real-time commission system performance metrics
             </p>
@@ -89,8 +90,12 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
                 style={{
-                  backgroundColor: stat.isPositive ? 'var(--color-successBg)' : 'var(--color-dangerBg)',
-                  color: stat.isPositive ? 'var(--color-successLight)' : 'var(--color-dangerLight)'
+                  backgroundColor: stat.isPositive
+                    ? 'var(--color-successBg)'
+                    : 'var(--color-dangerBg)',
+                  color: stat.isPositive
+                    ? 'var(--color-successLight)'
+                    : 'var(--color-dangerLight)',
                 }}
               >
                 {stat.isPositive ? (
@@ -102,7 +107,9 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
               </span>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-textprimary">{stat.value}</h3>
+              <h3 className="text-2xl font-bold text-textprimary">
+                {stat.value}
+              </h3>
               <p className="mt-1 text-xs text-textsubtl">{stat.subtext}</p>
             </div>
           </div>
@@ -112,14 +119,18 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 backdrop-blur-md rounded-xl p-6 bg-bgcard shadow-custom-xl">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-textprimary">Sales Overview</h2>
+            <h2 className="text-lg font-semibold text-textprimary">
+              Sales Overview
+            </h2>
             <p className="text-xs text-textmuted mt-1">Last 6 months</p>
           </div>
           <SalesChart sales={sales} />
         </div>
 
         <div className="backdrop-blur-md rounded-xl p-6 bg-bgcard shadow-custom-xl">
-          <h2 className="text-lg font-semibold mb-5 text-textprimary">Quick Stats</h2>
+          <h2 className="text-lg font-semibold mb-5 text-textprimary">
+            Quick Stats
+          </h2>
           <div className="space-y-5">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -129,18 +140,24 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
                 </span>
               </div>
               <div className="w-full rounded-full h-2 overflow-hidden bg-bginput">
-                <div className="h-2 rounded-full transition-all duration-500 bg-primary" style={{ width: '75%' }}></div>
+                <div
+                  className="h-2 rounded-full transition-all duration-500 bg-primary"
+                  style={{ width: '75%' }}
+                ></div>
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-textmuted">Policies Sold</span>
                 <span className="text-lg font-semibold text-textprimary">
-                  {sales.filter(s => !s.is_cancelled).length}
+                  {sales.filter((s) => !s.is_cancelled).length}
                 </span>
               </div>
               <div className="w-full rounded-full h-2 overflow-hidden bg-bginput">
-                <div className="h-2 rounded-full transition-all duration-500 bg-success" style={{ width: '60%' }}></div>
+                <div
+                  className="h-2 rounded-full transition-all duration-500 bg-success"
+                  style={{ width: '60%' }}
+                ></div>
               </div>
             </div>
             <div>
@@ -149,13 +166,17 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
                 <span className="text-lg font-semibold text-textprimary">
                   {formatCurrency(
                     sales.length > 0
-                      ? (summaryData?.total_commissions_paid || 0) / sales.length
+                      ? (summaryData?.total_commissions_paid || 0) /
+                          sales.length
                       : 0
                   )}
                 </span>
               </div>
               <div className="w-full rounded-full h-2 overflow-hidden bg-bginput">
-                <div className="h-2 rounded-full transition-all duration-500 bg-info" style={{ width: '85%' }}></div>
+                <div
+                  className="h-2 rounded-full transition-all duration-500 bg-info"
+                  style={{ width: '85%' }}
+                ></div>
               </div>
             </div>
           </div>
@@ -165,8 +186,12 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
       <div className="backdrop-blur-md rounded-xl overflow-hidden bg-bgcard shadow-custom-xl">
         <div className="px-6 py-4 bg-gradient-to-r from-gray-800/40 to-transparent">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-textprimary">Recent Transactions</h2>
-            <span className="text-xs text-textsubtl">Latest {recentSales.length} entries</span>
+            <h2 className="text-lg font-semibold text-textprimary">
+              Recent Transactions
+            </h2>
+            <span className="text-xs text-textsubtl">
+              Latest {recentSales.length} entries
+            </span>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -192,26 +217,41 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
             </thead>
             <tbody className="bg-transparent">
               {recentSales.map((sale, index) => (
-                <tr 
-                  key={sale.id} 
+                <tr
+                  key={sale.id}
                   className="transition-colors duration-150"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bgCardHover)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      'var(--color-bgCardHover)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'transparent')
+                  }
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.2))' }}>
+                      <div
+                        className="flex-shrink-0 h-9 w-9 rounded-lg flex items-center justify-center"
+                        style={{
+                          background:
+                            'linear-gradient(to bottom right, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.2))',
+                        }}
+                      >
                         <span className="text-sm font-semibold text-primary-light">
                           {sale.agent_name.charAt(0)}
                         </span>
                       </div>
                       <div className="ml-3">
-                        <div className="text-sm font-medium text-textsecondary">{sale.agent_name}</div>
+                        <div className="text-sm font-medium text-textsecondary">
+                          {sale.agent_name}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-mono text-textsecondary">{sale.policy_number}</div>
+                    <div className="text-sm font-mono text-textsecondary">
+                      {sale.policy_number}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-textmuted">
