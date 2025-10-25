@@ -79,8 +79,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-[#1a1a1a] overflow-y-auto">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:p-4">
+        <div className="flex flex-col flex-grow bg-[#1a1a1a] overflow-y-auto rounded-2xl shadow-2xl">
           <div className="flex items-center flex-shrink-0 px-6 py-6">
             <h1 className="text-2xl font-bold text-white">Commission <span className="text-blue-500">System</span></h1>
           </div>
