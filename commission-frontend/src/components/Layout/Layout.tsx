@@ -8,8 +8,6 @@ import {
   ArrowUturnLeftIcon,
   Bars3Icon,
   XMarkIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -22,10 +20,6 @@ const navigation = [
   { name: 'Sales Management', href: '/sales', icon: ShoppingCartIcon },
   { name: 'Commission Reports', href: '/reports', icon: DocumentChartBarIcon },
   { name: 'Clawback Management', href: '/clawbacks', icon: ArrowUturnLeftIcon },
-];
-
-const generalNavigation = [
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -59,60 +53,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           
           {/* Mobile Navigation */}
           <div className="flex-1 px-4 py-4">
-            <div className="mb-6">
-              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
-              <nav className="space-y-1">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* General Section */}
-            <div>
-              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">GENERAL</h2>
-              <nav className="space-y-1">
-                {generalNavigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-                <button
-                  className="w-full group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
-                >
-                  <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0" />
-                  Log out
-                </button>
-              </nav>
-            </div>
+            <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
+            <nav className="space-y-1">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
         </div>
       </div>
@@ -125,60 +86,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           
           <div className="flex-1 px-4 py-2">
-            {/* MENU Section */}
-            <div className="mb-8">
-              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
-              <nav className="space-y-1">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* GENERAL Section */}
-            <div>
-              <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">GENERAL</h2>
-              <nav className="space-y-1">
-                {generalNavigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-                <button
-                  className="w-full group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
-                  onClick={() => alert('Logout functionality')}
-                >
-                  <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0" />
-                  Log out
-                </button>
-              </nav>
-            </div>
+            <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">MENU</h2>
+            <nav className="space-y-1">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
         </div>
       </div>
