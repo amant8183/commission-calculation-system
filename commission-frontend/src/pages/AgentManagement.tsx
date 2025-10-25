@@ -31,7 +31,7 @@ const AgentManagement: React.FC<AgentManagementProps> = ({
         {hierarchy.length > 0 ? (
           <div className="space-y-2">
             {hierarchy.map((agent) => (
-              <AgentNode key={agent.id} agent={agent} />
+              <AgentNode key={agent.id} agent={agent} onUpdate={onAgentAdded} />
             ))}
           </div>
         ) : (

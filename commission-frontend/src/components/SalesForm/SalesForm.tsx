@@ -199,7 +199,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
               required
             >
               {agents.length === 0 ? (
-                <option value="">Loading agents...</option>
+                <option value="">Add agents first</option>
               ) : (
                 agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>

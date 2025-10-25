@@ -27,6 +27,9 @@ const API_URL =
 const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
   const color = levelColors[agent.level] || 'border-gray-400';
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [editName, setEditName] = useState(agent.name);
   const [editLevel, setEditLevel] = useState(agent.level);
   const [editParentId, setEditParentId] = useState<number | null>(
@@ -35,20 +38,19 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${agent.name}?`)) {
-      return;
-    }
-
+  const confirmDelete = async () => {
     setLoading(true);
     setError('');
+    setShowDeleteModal(false);
+
     try {
       await axios.delete(`${API_URL}/agents/${agent.id}`);
       if (onUpdate) onUpdate();
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to delete agent';
       setError(errorMsg);
-      alert(errorMsg);
+      setErrorMessage(errorMsg);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -114,7 +116,7 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
             Edit
           </button>
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
             className="text-xs px-2 py-1 rounded"
             style={{
               backgroundColor: 'var(--color-danger)',
@@ -220,6 +222,93 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className="p-6 rounded-lg shadow-xl max-w-md w-full"
+            style={{
+              backgroundColor: 'var(--color-bgCard)',
+            }}
+          >
+            <h3
+              className="text-xl font-semibold mb-4"
+              style={{ color: 'var(--color-textPrimary)' }}
+            >
+              Confirm Delete
+            </h3>
+            <p
+              className="mb-6"
+              style={{ color: 'var(--color-textPrimary)' }}
+            >
+              Are you sure you want to delete {agent.name}?
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded"
+                style={{
+                  backgroundColor: 'var(--color-bgInput)',
+                  color: 'var(--color-textPrimary)',
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded"
+                style={{
+                  backgroundColor: 'var(--color-danger)',
+                  color: 'var(--color-textPrimary)',
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className="p-6 rounded-lg shadow-xl max-w-md w-full"
+            style={{
+              backgroundColor: 'var(--color-bgCard)',
+            }}
+          >
+            <h3
+              className="text-xl font-semibold mb-4"
+              style={{ color: 'var(--color-danger)' }}
+            >
+              Error
+            </h3>
+            <p
+              className="mb-6"
+              style={{ color: 'var(--color-textPrimary)' }}
+            >
+              {errorMessage}
+            </p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowErrorModal(false)}
+                className="px-4 py-2 rounded"
+                style={{
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-textPrimary)',
+                }}
+              >
+                OK
+              </button>
+            </div>
           </div>
         </div>
       )}
