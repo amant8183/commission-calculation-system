@@ -144,7 +144,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
                   setErrors({...errors, name: ''});
                 }
               }}
-              className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm"
+              className="mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:outline-none sm:text-sm px-3 py-2.5"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
                 color: 'var(--color-textPrimary)'
@@ -165,7 +165,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
               id="agentLevel"
               value={level}
               onChange={(e) => setLevel(parseInt(e.target.value))}
-              className="mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
+              className="mt-1 block w-full rounded-md py-2.5 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
                 color: 'var(--color-textPrimary)'
@@ -192,7 +192,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
                   setErrors({...errors, parentId: ''});
                 }
               }}
-              className="mt-1 block w-full rounded-md py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
+              className="mt-1 block w-full rounded-md py-2.5 pl-3 pr-10 text-base focus:outline-none focus:ring-2 sm:text-sm"
               style={{
                 backgroundColor: 'var(--color-bgInput)',
                 color: 'var(--color-textPrimary)',

@@ -74,7 +74,7 @@ const ClawbackManagement: React.FC<ClawbackManagementProps> = ({ sales, onCancel
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Enter policy number or agent name..."
-            className="block w-full rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm"
+            className="block w-full rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm px-3 py-2.5"
             style={{ 
               backgroundColor: 'var(--color-bgInput)', 
               color: 'var(--color-textPrimary)'

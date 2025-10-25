@@ -59,17 +59,33 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
     const chartBgColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chartPrimary').trim();
     const chartBorderColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chartPrimaryBorder').trim();
 
+    const gradient = [
+      'rgba(59, 130, 246, 0.9)',
+      'rgba(99, 102, 241, 0.9)',
+      'rgba(139, 92, 246, 0.9)'
+    ];
+
     setChartData({
       labels,
       datasets: [
         {
-          label: 'Sales Volume ($)',
+          label: 'Sales Volume',
           data: values,
-          backgroundColor: chartBgColor || 'rgba(59, 130, 246, 0.6)',
-          borderColor: chartBorderColor || 'rgb(59, 130, 246)',
-          borderWidth: 2,
-          borderRadius: 6,
+          backgroundColor: values.map((_, index) => gradient[index % gradient.length]),
+          borderColor: 'transparent',
+          borderWidth: 0,
+          borderRadius: 8,
           borderSkipped: false,
+          barThickness: 'flex',
+          maxBarThickness: 60,
+          hoverBackgroundColor: values.map((_, index) => {
+            const colors = [
+              'rgba(59, 130, 246, 1)',
+              'rgba(99, 102, 241, 1)',
+              'rgba(139, 92, 246, 1)'
+            ];
+            return colors[index % colors.length];
+          }),
         },
       ],
     });
@@ -81,47 +97,46 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index' as const,
+    },
     plugins: {
       legend: {
-        position: 'top' as const,
-        labels: {
-          color: getColorVar('--color-chartText') || '#9ca3af',
-          font: {
-            size: 12,
-            family: 'Inter, system-ui, sans-serif'
-          },
-          padding: 15,
-          usePointStyle: true,
-          pointStyle: 'circle'
-        }
+        display: false
       },
       title: {
-        display: true,
-        text: 'Monthly Sales Volume (Last 6 Months)',
-        color: getColorVar('--color-chartTextDim') || '#6b7280',
-        font: {
-          size: 13,
-          weight: '500' as any,
-          family: 'Inter, system-ui, sans-serif'
-        },
-        padding: {
-          top: 0,
-          bottom: 20
-        }
+        display: false
       },
       tooltip: {
-        backgroundColor: getColorVar('--color-bgDark') || 'rgba(17, 24, 39, 0.95)',
-        titleColor: getColorVar('--color-textPrimary') || '#f3f4f6',
-        bodyColor: getColorVar('--color-textSecondary') || '#d1d5db',
-        borderColor: getColorVar('--color-border') || 'rgba(75, 85, 99, 0.5)',
+        enabled: true,
+        backgroundColor: 'rgba(30, 31, 36, 0.95)',
+        titleColor: '#ffffff',
+        bodyColor: '#d1d5db',
+        borderColor: 'rgba(59, 130, 246, 0.5)',
         borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8,
+        padding: 16,
+        cornerRadius: 12,
         displayColors: true,
+        boxPadding: 6,
+        titleFont: {
+          size: 14,
+          weight: 'bold' as const,
+          family: 'Inter, system-ui, sans-serif'
+        },
+        bodyFont: {
+          size: 13,
+          weight: 'normal' as const,
+          family: 'Inter, system-ui, sans-serif'
+        },
         callbacks: {
+          title: function(context: any) {
+            return context[0].label;
+          },
           label: function(context: any) {
-            return 'Sales Volume: $' + context.parsed.y.toLocaleString();
+            const value = context.parsed.y;
+            return `Sales: $${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
           }
         }
       }
@@ -135,28 +150,47 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
         ticks: {
           color: getColorVar('--color-chartText') || '#9ca3af',
           font: {
-            size: 11,
+            size: 12,
+            weight: 'normal' as const,
             family: 'Inter, system-ui, sans-serif'
-          }
+          },
+          padding: 8
         }
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: getColorVar('--color-chartGrid') || 'rgba(75, 85, 99, 0.2)',
-          drawBorder: false
+          color: 'rgba(75, 85, 99, 0.15)',
+          drawBorder: false,
+          lineWidth: 1
+        },
+        border: {
+          display: false,
+          dash: [5, 5]
         },
         ticks: {
           color: getColorVar('--color-chartText') || '#9ca3af',
           font: {
-            size: 11,
+            size: 12,
+            weight: 'normal' as const,
             family: 'Inter, system-ui, sans-serif'
           },
+          padding: 12,
+          maxTicksLimit: 6,
           callback: function(value: any) {
+            if (value >= 1000000) {
+              return '$' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
             return '$' + value.toLocaleString();
           }
         }
       }
+    },
+    animation: {
+      duration: 750,
+      easing: 'easeInOutQuart' as const
     }
   };
 
@@ -169,7 +203,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-80">
       <Bar options={options} data={chartData} />
     </div>
   );

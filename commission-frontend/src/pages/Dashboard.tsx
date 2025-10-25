@@ -75,13 +75,6 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
               Real-time commission system performance metrics
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <select className="px-4 py-2 backdrop-blur-sm rounded-lg text-sm font-medium focus:outline-none focus:ring-2 transition-all cursor-pointer bg-bginput text-textsecondary">
-              <option className="bg-bgdark">Last 30 days</option>
-              <option className="bg-bgdark">Last 90 days</option>
-              <option className="bg-bgdark">This year</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -118,19 +111,9 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 backdrop-blur-md rounded-xl p-6 bg-bgcard shadow-custom-xl">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-textprimary">Sales Overview</h2>
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-bginput text-textmuted">
-                Week
-              </button>
-              <button className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-primary text-textprimary">
-                Month
-              </button>
-              <button className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-bginput text-textmuted">
-                Year
-              </button>
-            </div>
+            <p className="text-xs text-textmuted mt-1">Last 6 months</p>
           </div>
           <SalesChart sales={sales} />
         </div>
