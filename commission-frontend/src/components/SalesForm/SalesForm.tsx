@@ -9,27 +9,20 @@ interface SalesFormProps {
 }
 
 const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
-  // State for the list of agents
   const [agents, setAgents] = useState<Agent[]>([]);
-  
-  // State for the form inputs
   const [policyNumber, setPolicyNumber] = useState('');
   const [policyValue, setPolicyValue] = useState('');
   const [selectedAgentId, setSelectedAgentId] = useState('');
-  
-  // State for loading and messages
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  // 1. Fetch Level 1 agents when the component loads
   useEffect(() => {
     const fetchSellingAgents = async () => {
       try {
         const response = await axios.get(`${API_URL}/agents?level=1`);
         setAgents(response.data);
-        // Set a default selected agent if list is not empty
         if (response.data.length > 0) {
           setSelectedAgentId(response.data[0].id.toString());
         }
@@ -42,18 +35,15 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
     fetchSellingAgents();
   }, []);
 
-  // Validation function
   const validateForm = (): boolean => {
     const newErrors: {[key: string]: string} = {};
     
-    // Policy Number validation
     if (!policyNumber.trim()) {
       newErrors.policyNumber = 'Policy number is required';
     } else if (policyNumber.trim().length < 3) {
       newErrors.policyNumber = 'Policy number must be at least 3 characters';
     }
     
-    // Policy Value validation
     if (!policyValue) {
       newErrors.policyValue = 'Policy value is required';
     } else {
@@ -67,7 +57,6 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
       }
     }
     
-    // Agent selection validation
     if (!selectedAgentId) {
       newErrors.selectedAgentId = 'Please select a selling agent';
     }
@@ -76,15 +65,12 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 2. Handle the form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clear previous messages
     setMessage('');
     setIsError(false);
     
-    // Validate form
     if (!validateForm()) {
       setMessage('Please fix the errors below.');
       setIsError(true);
@@ -107,19 +93,16 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
         setIsError(false);
         setErrors({});
         
-        // Reset form
         setPolicyNumber('');
         setPolicyValue('');
 
         onSaleAdded();
         
-        // Clear success message after 5 seconds
         setTimeout(() => setMessage(''), 5000);
       }
     } catch (error: any) {
       console.error('Failed to record sale:', error);
       
-      // Extract error message from API response
       let errorMessage = 'Failed to record sale. Please try again.';
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
@@ -139,7 +122,6 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
       <h2 className="text-xl font-semibold mb-4 text-textprimary">Record a New Sale</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Policy Number */}
           <div>
             <label htmlFor="policyNumber" className="block text-sm font-medium text-textmuted">
               Policy Number *
@@ -163,7 +145,6 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
             )}
           </div>
           
-          {/* Policy Value */}
           <div>
             <label htmlFor="policyValue" className="block text-sm font-medium text-textmuted">
               Policy Value ($) *
@@ -189,7 +170,6 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSaleAdded }) => {
             )}
           </div>
           
-          {/* Agent Dropdown */}
           <div>
             <label htmlFor="agentId" className="block text-sm font-medium text-textmuted">
               Selling Agent *

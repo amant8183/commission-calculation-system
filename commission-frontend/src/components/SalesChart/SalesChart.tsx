@@ -11,7 +11,6 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { Sale } from '../SalesList';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -34,11 +33,10 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
       return;
     }
 
-    // Group sales by month
     const salesByMonth: { [key: string]: number } = {};
     
     sales.forEach(sale => {
-      if (sale.is_cancelled) return; // Skip cancelled sales
+      if (sale.is_cancelled) return;
       
       const date = new Date(sale.sale_date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -49,11 +47,9 @@ const SalesChart: React.FC<SalesChartProps> = ({ sales }) => {
       salesByMonth[monthKey] += sale.policy_value;
     });
 
-    // Sort by month and get last 6 months
     const sortedMonths = Object.keys(salesByMonth).sort().slice(-6);
     const values = sortedMonths.map(month => salesByMonth[month]);
 
-    // Format month labels (e.g., "2024-10" -> "Oct 2024")
     const labels = sortedMonths.map(month => {
       const [year, monthNum] = month.split('-');
       const date = new Date(parseInt(year), parseInt(monthNum) - 1);

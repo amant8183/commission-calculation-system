@@ -22,12 +22,10 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
     }).format(value);
   };
 
-  // Calculate recent sales (last 5)
   const recentSales = sales
     .filter((sale) => !sale.is_cancelled)
     .slice(0, 5);
 
-  // Stats data with change indicators
   const stats = [
     {
       label: 'Total Sales Value',
@@ -69,7 +67,6 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
 
   return (
     <div className="space-y-6">
-      {/* Professional Header */}
       <div className="backdrop-blur-md rounded-2xl p-6 bg-bgcard shadow-custom-xl">
         <div className="flex items-center justify-between">
           <div>
@@ -88,7 +85,6 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
         </div>
       </div>
 
-      {/* Stats Grid - Dark Glass Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, idx) => (
           <div
@@ -120,9 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
         ))}
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Sales Chart - Takes 2 columns */}
         <div className="lg:col-span-2 backdrop-blur-md rounded-xl p-6 bg-bgcard shadow-custom-xl">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-textprimary">Sales Overview</h2>
@@ -141,7 +135,6 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
           <SalesChart sales={sales} />
         </div>
 
-        {/* Quick Stats */}
         <div className="backdrop-blur-md rounded-xl p-6 bg-bgcard shadow-custom-xl">
           <h2 className="text-lg font-semibold mb-5 text-textprimary">Quick Stats</h2>
           <div className="space-y-5">
@@ -186,7 +179,6 @@ const Dashboard: React.FC<DashboardProps> = ({ summaryData, loading, sales }) =>
         </div>
       </div>
 
-      {/* Recent Activity Table */}
       <div className="backdrop-blur-md rounded-xl overflow-hidden bg-bgcard shadow-custom-xl">
         <div className="px-6 py-4 bg-gradient-to-r from-gray-800/40 to-transparent">
           <div className="flex items-center justify-between">

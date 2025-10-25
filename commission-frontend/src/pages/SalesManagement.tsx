@@ -18,10 +18,8 @@ const SalesManagement: React.FC<SalesManagementProps> = ({ sales, onSaleAdded, o
         </p>
       </div>
 
-      {/* Reuse existing SalesForm component */}
       <SalesForm onSaleAdded={onSaleAdded} />
 
-      {/* Reuse existing SalesList component */}
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
         <h2 className="text-xl font-semibold mb-4 text-textprimary">Sales History</h2>
         <SalesList sales={sales} onCancelSale={onCancelSale} />

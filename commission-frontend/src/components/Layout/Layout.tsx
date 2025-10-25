@@ -30,7 +30,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, var(--color-bgBase), var(--color-bgDark), var(--color-bgBase))' }}>
-      {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? '' : 'pointer-events-none'}`}>
         <div
           className={`fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity ${
@@ -55,8 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
-          
-          {/* Mobile Navigation */}
+
           <div className="flex-1 py-6">
             <h2 className="px-6 text-xs font-semibold uppercase tracking-wider mb-6 text-textSubtle">MENU</h2>
             <nav>
@@ -99,7 +97,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </div>
 
-      {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow overflow-y-auto bg-bgsidebar">
           <div className="flex items-center flex-shrink-0 px-6 py-6 gap-3">
@@ -146,9 +143,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
-        {/* Top bar for mobile */}
         <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 backdrop-blur-md lg:hidden shadow-custom-lg" style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
           <button
             onClick={() => setSidebarOpen(true)}
@@ -164,7 +159,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
 
-        {/* Page content */}
         <main className="flex-1">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">

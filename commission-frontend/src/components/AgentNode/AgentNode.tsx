@@ -1,4 +1,3 @@
-// frontend/src/components/AgentNode.tsx
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -122,7 +121,6 @@ const AgentNode: React.FC<AgentNodeProps> = ({ agent, onUpdate }) => {
         </div>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div 

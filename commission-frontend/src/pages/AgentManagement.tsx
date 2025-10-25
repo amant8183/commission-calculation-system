@@ -17,10 +17,8 @@ const AgentManagement: React.FC<AgentManagementProps> = ({ hierarchy, onAgentAdd
         </p>
       </div>
 
-      {/* Reuse existing AgentForm component */}
       <AgentForm onAgentAdded={onAgentAdded} />
 
-      {/* Agent Hierarchy Visualization */}
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
         <h2 className="text-xl font-semibold mb-4 text-textprimary">Agent Hierarchy</h2>
         {hierarchy.length > 0 ? (

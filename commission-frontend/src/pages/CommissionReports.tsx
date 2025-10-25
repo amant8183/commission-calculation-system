@@ -29,11 +29,9 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
         </p>
       </div>
 
-      {/* Bonus Calculation Section */}
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
         <h2 className="text-xl font-semibold mb-4 text-textprimary">Calculate Bonuses</h2>
-        
-        {/* Monthly Bonuses */}
+
         <div className="mb-4">
           <h3 className="text-sm font-medium mb-2 text-textmuted">Monthly Bonuses</h3>
           <button
@@ -45,7 +43,6 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
           </button>
         </div>
 
-        {/* Quarterly Bonuses */}
         <div className="mb-4">
           <h3 className="text-sm font-medium mb-2 text-textmuted">Quarterly Bonuses</h3>
           <div className="flex gap-2">
@@ -62,7 +59,6 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
           </div>
         </div>
 
-        {/* Annual Bonuses */}
         <div className="mb-4">
           <h3 className="text-sm font-medium mb-2 text-textmuted">Annual Bonuses</h3>
           <button
@@ -81,13 +77,11 @@ const CommissionReportsPage: React.FC<CommissionReportsPageProps> = ({
         )}
       </div>
 
-      {/* Reuse existing BonusList component */}
       <div className="rounded-lg p-6 bg-bgcard shadow-custom-xl">
         <h2 className="text-xl font-semibold mb-4 text-textprimary">Bonus History</h2>
         <BonusList bonuses={bonuses} />
       </div>
 
-      {/* Reuse existing CommissionReports component */}
       <CommissionReports sales={sales} bonuses={bonuses} />
     </div>
   );

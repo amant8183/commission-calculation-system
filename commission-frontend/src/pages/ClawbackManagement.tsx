@@ -17,7 +17,6 @@ const ClawbackManagementPage: React.FC<ClawbackManagementPageProps> = ({ sales, 
         </p>
       </div>
 
-      {/* Reuse existing ClawbackManagement component */}
       <ClawbackManagement sales={sales} onCancelSale={handleCancelSale} />
     </div>
   );

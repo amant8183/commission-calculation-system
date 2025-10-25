@@ -25,23 +25,19 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   const [isError, setIsError] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  // Fetch potential parent agents when level changes
   useEffect(() => {
     const fetchParentAgents = async () => {
       if (level === 4) {
-        // Directors have no parents
         setAvailableParents([]);
         setParentId('');
         return;
       }
 
       try {
-        // Fetch agents of higher level
         const higherLevel = level + 1;
         const response = await axios.get(`${API_URL}/agents?level=${higherLevel}`);
         setAvailableParents(response.data);
         
-        // Reset parent selection when level changes
         if (response.data.length > 0) {
           setParentId(response.data[0].id.toString());
         } else {
@@ -59,14 +55,12 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
   const validateForm = (): boolean => {
     const newErrors: {[key: string]: string} = {};
 
-    // Name validation
     if (!name.trim()) {
       newErrors.name = 'Agent name is required';
     } else if (name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
     }
 
-    // Parent validation (for non-directors)
     if (level !== 4 && !parentId) {
       newErrors.parentId = 'Please select a parent agent';
     }
@@ -95,7 +89,6 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
         level: level,
       };
 
-      // Only include parent_id if not a Director
       if (level !== 4 && parentId) {
         agentData.parent_id = parseInt(parentId);
       }
@@ -107,14 +100,12 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
         setIsError(false);
         setErrors({});
         
-        // Reset form
         setName('');
         setLevel(1);
         setParentId('');
 
         onAgentAdded();
 
-        // Clear success message after 5 seconds
         setTimeout(() => setMessage(''), 5000);
       }
     } catch (error: any) {
@@ -139,7 +130,6 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
       <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-textPrimary)' }}>Add New Agent</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Agent Name */}
           <div>
             <label htmlFor="agentName" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               Agent Name *
@@ -167,7 +157,6 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
             )}
           </div>
 
-          {/* Agent Level */}
           <div>
             <label htmlFor="agentLevel" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               Level *
@@ -190,7 +179,6 @@ const AgentForm: React.FC<AgentFormProps> = ({ onAgentAdded }) => {
             </select>
           </div>
 
-          {/* Parent Agent */}
           <div>
             <label htmlFor="parentAgent" className="block text-sm font-medium" style={{ color: 'var(--color-textMuted)' }}>
               {level === 4 ? 'Parent Agent (N/A)' : 'Parent Agent *'}

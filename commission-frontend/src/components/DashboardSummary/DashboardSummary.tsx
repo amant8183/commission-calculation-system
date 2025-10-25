@@ -4,7 +4,7 @@ export interface SummaryData {
   total_sales_value: number;
   total_commissions_paid: number;
   total_bonuses_paid: number;
-  total_clawbacks_value: number; // This is usually negative or zero
+  total_clawbacks_value: number;
   agent_count: number;
 }
 
@@ -13,14 +13,11 @@ interface DashboardSummaryProps {
   loading: boolean;
 }
 
-// Helper to format currency
 const formatCurrency = (value: number | undefined | null): string => {
   if (value === undefined || value === null) return '$--';
-  // Specify 'en-US' locale for consistent formatting (e.g., 1,234,567.89)
   return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-// Helper for individual stat cards
 const StatCard: React.FC<{ title: string; value: string | number; color?: string }> = ({ title, value, color = 'text-gray-900' }) => (
   <div className="bg-white overflow-hidden shadow rounded-lg">
     <div className="px-4 py-5 sm:p-6">
@@ -55,11 +52,9 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary, loading })
          <StatCard title="Total Sales Value" value={formatCurrency(summary.total_sales_value)} />
          <StatCard title="Commissions Paid" value={formatCurrency(summary.total_commissions_paid)} color="text-green-600" />
          <StatCard title="Bonuses Paid" value={formatCurrency(summary.total_bonuses_paid)} color="text-blue-600" />
-         {/* Display clawbacks using absolute value and red color only if non-zero */}
          {summary.total_clawbacks_value !== 0 && (
            <StatCard title="Total Clawbacks" value={formatCurrency(Math.abs(summary.total_clawbacks_value))} color="text-red-600" />
          )}
-         {/* Show a placeholder or zero value if clawbacks are zero */}
          {summary.total_clawbacks_value === 0 && (
             <StatCard title="Total Clawbacks" value={formatCurrency(0)} color="text-gray-500" />
          )}

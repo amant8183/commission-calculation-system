@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Define the shape of a Sale object
 export interface Sale {
   id: number;
   policy_number: string;

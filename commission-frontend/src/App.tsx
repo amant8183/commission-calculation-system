@@ -20,8 +20,8 @@ function App() {
   const [bonuses, setBonuses] = useState<Bonus[]>([]);
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [calcMessage, setCalcMessage] = useState(''); // Message for bonus calculation
-  // Fetch Hierarchy
+  const [calcMessage, setCalcMessage] = useState('');
+
   const fetchHierarchy = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/agents`);
@@ -31,7 +31,6 @@ function App() {
     }
   }, []);
 
-  // Fetch Sales
   const fetchSales = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/sales`);
@@ -41,7 +40,6 @@ function App() {
     }
   }, []);
 
-  // 3. Fetch Bonuses function
   const fetchBonuses = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/bonuses`);
@@ -50,8 +48,7 @@ function App() {
       console.error("Failed to fetch bonuses:", error);
     }
   }, []);
-  
-  // 4. Fetch Summary
+
   const fetchSummary = useCallback(async () => {
     try {
       const response = await axios.get<SummaryData>(`${API_URL}/dashboard/summary`);
@@ -62,16 +59,13 @@ function App() {
     }
   }, []);
 
-  // Load all data on initial render
   useEffect(() => {
     setLoading(true);
-    // Fetch all data including summary
     Promise.all([fetchHierarchy(), fetchSales(), fetchBonuses(), fetchSummary()]).finally(() => {
       setLoading(false);
     });
   }, [fetchHierarchy, fetchSales, fetchBonuses, fetchSummary]);
 
-  // 4. Function to trigger bonus calculation (generic for all types)
   const handleCalculateBonuses = useCallback(async (bonusType: 'Monthly' | 'Quarterly' | 'Annual', period: string) => {
     setCalcMessage('Calculating...');
 
@@ -89,7 +83,6 @@ function App() {
     }
   }, [fetchBonuses, fetchSummary]);
 
-  // Helper functions for each bonus type
   const handleMonthlyBonus = () => {
     const now = new Date();
     const periodStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -108,30 +101,26 @@ function App() {
     handleCalculateBonuses('Annual', periodStr);
   };
 
-  // Callback for when a sale is added
   const onSaleAdded = () => {
-    fetchSales(); // Refresh sales list
+    fetchSales();
     fetchSummary();
   };
 
-  // Callback for when an agent is added
   const onAgentAdded = () => {
-    fetchHierarchy(); // Refresh hierarchy
-    fetchSummary(); // Refresh summary (agent count)
+    fetchHierarchy();
+    fetchSummary();
   };
-  
-  // --- 2. ADD CANCELLATION HANDLER ---
+
   const handleCancelSale = useCallback(async (saleId: number) => {
     try {
       await axios.put(`${API_URL}/sales/${saleId}/cancel`);
-      // Refresh both sales (to show cancelled status) and bonuses (potential clawbacks)
       await fetchSales();
       await fetchBonuses();
       await fetchSummary();
     } catch (error) {
       console.error(`Failed to cancel sale ${saleId}:`, error);
     }
-  }, [fetchSales, fetchBonuses, fetchSummary]); // Add dependencies
+  }, [fetchSales, fetchBonuses, fetchSummary]);
 
   return (
     <Router>
