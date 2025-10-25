@@ -1100,9 +1100,13 @@ def get_bonuses():
         )
 
 
+# Initialize database when module is loaded (works with Gunicorn)
+with app.app_context():
+    db.create_all()
+    seed_performance_tiers()
+    db.session.commit()
+    print("✅ Database initialized successfully!")
+
+
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        seed_performance_tiers()
-        db.session.commit()
     app.run(debug=True, port=5000)
