@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/Tests-39%20Passed-success.svg)]()
 
-🌐 **[Live Demo](https://commission-calculation-system-ashen.vercel.app/)** | 📖 [Documentation](#documentation)
+🌐 **[Live Demo](https://commission-calculation-system-beta.vercel.app/)** | 📖 [Documentation](#documentation)
 
 ---
 
