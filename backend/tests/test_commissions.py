@@ -1,6 +1,6 @@
 import pytest
 import json
-from app import db, Agent, Sale, Commission, HierarchySnapshot
+from models import db, Agent, Sale, Commission, HierarchySnapshot
 
 
 # A "fixture" to create our 4-level hierarchy for the test

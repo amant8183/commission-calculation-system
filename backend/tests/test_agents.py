@@ -1,5 +1,5 @@
 import json
-from app import Agent, db
+from models import Agent, db
 
 
 def test_add_and_get_agents(client, db):

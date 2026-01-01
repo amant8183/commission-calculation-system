@@ -1,7 +1,7 @@
 import pytest
 import json
 from datetime import datetime, timezone
-from app import PerformanceTier, Bonus, Sale, Agent
+from models import PerformanceTier, Bonus, Sale, Agent
 
 
 def test_calculate_monthly_bonus_for_agent(client, db):  # Use client and db_session

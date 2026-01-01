@@ -1,6 +1,6 @@
 import pytest
 import json
-from app import db, Agent, Sale
+from models import db, Agent, Sale
 
 
 def test_add_agent_empty_request_body(client, db):

@@ -1,6 +1,6 @@
 import pytest
 import json
-from app import db, Agent, Sale, Commission, Clawback, HierarchySnapshot
+from models import db, Agent, Sale, Commission, Clawback, HierarchySnapshot
 
 # Re-use the hierarchy setup fixture from commissions test
 from tests.test_commissions import setup_hierarchy
@@ -76,7 +76,7 @@ def test_cancel_policy_and_create_commission_clawbacks(client, db, setup_hierarc
 
 # backend/tests/test_clawbacks.py
 # ... (keep existing imports and previous test function) ...
-from app import Bonus, PerformanceTier  # Add Bonus and PerformanceTier
+from models import Bonus, PerformanceTier  # Add Bonus and PerformanceTier
 from datetime import datetime, timezone  # Add datetime and timezone
 
 

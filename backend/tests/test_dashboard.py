@@ -1,6 +1,6 @@
 import pytest
 import json
-from app import db, Agent, Sale, Commission, Bonus, Clawback
+from models import db, Agent, Sale, Commission, Bonus, Clawback
 from tests.test_commissions import setup_hierarchy  # Re-use fixture
 
 

@@ -1,11 +1,7 @@
 # backend/conftest.py
 import pytest
-from app import (
-    app as flask_app,
-    db as sqlalchemy_db,
-    PerformanceTier,
-    seed_performance_tiers,
-)
+from app import app as flask_app, seed_performance_tiers
+from models import db as sqlalchemy_db, PerformanceTier
 
 
 # Provide the Flask app instance
@@ -25,9 +21,8 @@ def app():
         # Seed the performance tiers once per session
         if sqlalchemy_db.session.query(PerformanceTier).count() == 0:
             try:
-                # Ensure seed_performance_tiers exists in app.py
-                seed_performance_tiers()
-                sqlalchemy_db.session.commit()  # Commit seeding
+                # Seed performance tiers for test session
+                seed_performance_tiers(flask_app)
                 print("\n--- Performance tiers seeded for test session ---")
             except Exception as e:
                 sqlalchemy_db.session.rollback()
@@ -60,8 +55,7 @@ def db(app):
         sqlalchemy_db.create_all()
         # Re-seed performance tiers for each test
         try:
-            seed_performance_tiers()
-            sqlalchemy_db.session.commit()
+            seed_performance_tiers(app)
         except Exception as e:
             sqlalchemy_db.session.rollback()
             print(f"\n--- ERROR re-seeding tiers in test: {e} ---")
