@@ -1,10 +1,11 @@
 import React from 'react';
 import SalesChart from '../components/SalesChart';
 import { Sale } from '../components/SalesList';
+import { SummaryData } from '../components/DashboardSummary';
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
 
 interface DashboardProps {
-  summaryData: any;
+  summaryData: SummaryData | null;
   loading: boolean;
   sales: Sale[];
 }
@@ -167,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {formatCurrency(
                     sales.length > 0
                       ? (summaryData?.total_commissions_paid || 0) /
-                          sales.length
+                      sales.length
                       : 0
                   )}
                 </span>
@@ -221,8 +222,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   key={sale.id}
                   className="transition-colors duration-150"
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      'var(--color-bgCardHover)')
+                  (e.currentTarget.style.backgroundColor =
+                    'var(--color-bgCardHover)')
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = 'transparent')

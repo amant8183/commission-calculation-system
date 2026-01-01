@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { Sale } from '../SalesList';
 
 interface ClawbackManagementProps {
-  sales: any[];
+  sales: Sale[];
   onCancelSale: (saleId: number) => void;
 }
 
@@ -9,7 +10,7 @@ const ClawbackManagement: React.FC<ClawbackManagementProps> = ({
   sales,
   onCancelSale,
 }) => {
-  const [selectedSale, setSelectedSale] = useState<any | null>(null);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -24,7 +25,7 @@ const ClawbackManagement: React.FC<ClawbackManagementProps> = ({
   );
 
   // Calculate clawback impact
-  const calculateImpact = (sale: any) => {
+  const calculateImpact = (sale: Sale) => {
     const fycCommission = sale.policy_value * 0.5;
     // In real system, would also calculate override commissions
     return {
@@ -34,7 +35,7 @@ const ClawbackManagement: React.FC<ClawbackManagementProps> = ({
     };
   };
 
-  const handleSelectSale = (sale: any) => {
+  const handleSelectSale = (sale: Sale) => {
     setSelectedSale(sale);
   };
 

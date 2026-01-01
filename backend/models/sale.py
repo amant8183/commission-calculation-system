@@ -12,3 +12,5 @@ class Sale(db.Model):
     sale_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     agent_id = db.Column(db.Integer, db.ForeignKey("agent.id"), nullable=False)
     is_cancelled = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

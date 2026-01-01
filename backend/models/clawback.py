@@ -12,3 +12,5 @@ class Clawback(db.Model):
     original_bonus_id = db.Column(db.Integer, db.ForeignKey("bonus.id"))
     sale_id = db.Column(db.Integer, db.ForeignKey("sale.id"), nullable=False)
     processed_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
